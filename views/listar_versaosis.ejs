@@ -1,0 +1,47 @@
+<%- include('partials/head.ejs') %>
+<body>
+    <div class="container">
+
+
+
+        <div class="card mt-2">
+            
+            <div class="card-header">
+                Versão do Sistema
+            </div>
+            
+            <div class="card-header">
+                <a href="/inserir_versao"><button class="btn btn-primary">Inserir</button></a>
+                <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Versão</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      
+                        <% versoes.forEach((versao) =>{%>
+                          <tr>
+                            <td> <%= versao.id %></td>
+                            <td> <%= versao.versao.toUpperCase() %> </td>
+                          </tr>
+                        <%})%>
+                     
+                    </tbody>
+                  </table>
+
+            </div>
+
+
+        </div>
+        
+
+    </div>    
+</body>
+<%- include('partials/footer.ejs') %>

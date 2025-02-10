@@ -1,0 +1,31 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+
+    <div class="container">
+
+        <form action="/salvarversao" class="form-control" method="post">
+            
+            <div class="card">
+            
+                <div class="card-header">
+                    Insira a versão do sistema
+                </div>
+
+                <div class="card-body">
+                    <input type="text" name="versaosis" class="form-control form-control-lg"><br>
+                    <label for="versaosis">Ex: Softcam, Plenus, Legislarr</label>
+                </div>
+
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <a href="/listar_versaosis"><div class="btn btn-secondary">Voltar</div></a>
+                </div>
+                
+            </div>
+        </form>
+        
+    </div>
+
+</body>
+<%- include('partials/footer.ejs') %>
