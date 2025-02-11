@@ -8,6 +8,7 @@ const entidades = require('./database/entidades') //TRAZ CONEXAO COM A TABELA DO
 const versao_sistema = require('./database/versao_sistema')
 const setores = require('./database/setores');
 const usuarios = require('./database/usuarios');
+const tipos_de_usuarios = require('./database/tipos_de_usuarios');
 
 app.set('view engine','ejs') //importando EJS
 app.use(express.static('public')) //Permitindo arquivos estaticos
@@ -100,6 +101,37 @@ app.post('/salvarsetor',(req,res)=>{
         ativo: ativo
     }).then(()=>{
         res.redirect('/listar_setor')
+    })
+})
+
+//ROTAS DE USUARIOS E TIPOS DE USUARIOS
+
+app.get('/listar_tipos_de_usuarios',(req,res)=>{
+    tipos_de_usuarios.findAll().then(tipos_user => {
+        res.render('listar_tipos_de_usuarios',{
+            tipos: tipos_user
+        })
+    })
+    
+})
+
+app.get('/inserir_tipos_de_usuarios',(req,res)=>{
+    res.render('inserir_tipos_de_usuarios')
+})
+app.post('/salvar_tipo_de_usuarios', (req, res)=>{
+    var tipo = req.body.tipousuario.toLowerCase()
+    var inserir = req.body.inserir || 0
+    var alterar = req.body.alterar || 0
+    var deletar = req.body.deletar || 0
+
+    tipos_de_usuarios.create({
+        tipo: tipo,
+        inserir: inserir,
+        alterar: alterar,
+        deletar: deletar,
+        ativo: 1
+    }).then(()=>{
+        res.redirect('/listar_tipos_de_usuarios')
     })
 })
 
