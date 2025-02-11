@@ -1,8 +1,8 @@
 const sequelize = require('sequelize');
 const connection = require('./db')
 
-const tipos_de_usuarios = connection.define('tipos_de_usuarios',{
-    tipo:{
+const grupos_de_usuarios = connection.define('grupos_de_usuarios',{
+    grupo:{
         type: sequelize.TEXT,
         allowNull: false
     },
@@ -24,6 +24,6 @@ const tipos_de_usuarios = connection.define('tipos_de_usuarios',{
     }
 })
 
-tipos_de_usuarios.sync({force:false}).then(()=>{})
+grupos_de_usuarios.sync({force:false}).then(()=>{})
 
-module.exports = tipos_de_usuarios;
+module.exports = grupos_de_usuarios;

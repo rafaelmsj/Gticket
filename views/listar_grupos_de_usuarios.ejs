@@ -8,11 +8,11 @@
         <div class="card mt-2">
             
             <div class="card-header">
-                Tipos de Usúario
+                Grupos de Usúario
             </div>
             
             <div class="card-header">
-                <a href="/inserir_tipos_de_usuarios"><button class="btn btn-primary">Inserir</button></a>
+                <a href="/inserir_grupos_de_usuarios"><button class="btn btn-primary">Inserir</button></a>
                 <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
             </div>
 
@@ -21,19 +21,19 @@
                 <table class="table table-striped">
                     <thead>
                       <tr>
-                        <th scope="col">Tipo</th>
+                        <th scope="col">Grupo</th>
                         <th scope="col">Inserir</th>
                         <th scope="col">Alterar</th>
                         <th scope="col">Excluir</th>
                       </tr>
                     </thead>
                     <tbody>
-                        <% tipos.forEach((tipo) =>{%>
+                        <% grupos.forEach((grupo) =>{%>
                             <tr>
-                              <td> <%= tipo.tipo %></td>
-                              <td> <%= tipo.inserir  === 1 ? 'Sim' : 'Não'%></td>
-                              <td> <%= tipo.alterar  === 1 ? 'Sim' : 'Não'%></td>                              
-                              <td> <%= tipo.deletar  === 1 ? 'Sim' : 'Não'%></td>                              
+                              <td> <%= grupo.grupo %></td>
+                              <td> <%= grupo.inserir  === 1 ? 'Sim' : 'Não'%></td>
+                              <td> <%= grupo.alterar  === 1 ? 'Sim' : 'Não'%></td>                              
+                              <td> <%= grupo.deletar  === 1 ? 'Sim' : 'Não'%></td>                              
                             </tr>
                         <%})%>
                     </tbody>

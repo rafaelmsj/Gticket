@@ -15,12 +15,12 @@ const usuarios = connection.define('usuarios',{
         type: sequelize.INTEGER,
         allowNull: false
     },
-    tipo: {
+    grupo: {
         type: sequelize.INTEGER,
         allowNull: false
     },
     senha:{
-        type: sequelize.TEXT,
+        type: sequelize.STRING,
         allowNull: false
     },
     ativo: {

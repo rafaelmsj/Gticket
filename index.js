@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser')
 const express = require('express')
 const app = express()
+const bcrypt = require('bcryptjs'); //criptografa senha
 
 //BANCO DE DADOS
 const connection = require('./database/db') //TRAZ A A CONFIGURACAO DE CONEXAO DO BANCO DE DADOS 
@@ -8,7 +9,7 @@ const entidades = require('./database/entidades') //TRAZ CONEXAO COM A TABELA DO
 const versao_sistema = require('./database/versao_sistema')
 const setores = require('./database/setores');
 const usuarios = require('./database/usuarios');
-const tipos_de_usuarios = require('./database/tipos_de_usuarios');
+const grupos_de_usuarios = require('./database/grupos_de_usuarios');
 
 app.set('view engine','ejs') //importando EJS
 app.use(express.static('public')) //Permitindo arquivos estaticos
@@ -57,14 +58,11 @@ app.get('/listar_versaosis', (req,res)=>{
         res.render('listar_versaosis',{
             versoes: versoes
         })
-    })
-    
+    })    
 })
-
 app.get('/inserir_versao',(req,res)=>{
     res.render('inserir_versaosis')
 })
-
 app.post('/salvarversao',(req,res)=>{
     var versao = req.body.versaosis.toLowerCase().trim()
 
@@ -85,11 +83,9 @@ app.get('/listar_setor',(req,res)=>{
     })
     
 })
-
 app.get('/inserir_setor',(req,res)=>{
     res.render('inserir_setor')
 })
-
 app.post('/salvarsetor',(req,res)=>{
     var setor = req.body.setor.toLowerCase()
     var sigla = req.body.sigla.toUpperCase()
@@ -104,34 +100,78 @@ app.post('/salvarsetor',(req,res)=>{
     })
 })
 
-//ROTAS DE USUARIOS E TIPOS DE USUARIOS
+//ROTAS DE USUARIOS
+app.get('/listar_usuarios',(req,res)=>{
+    usuarios.findAll().then(usuarios=>{
+        res.render('listar_usuarios',{
+            usuarios: usuarios
+        })    
+    })
+    res.render('listar_usuarios')
+})
+app.get('/inserir_usuarios',(req,res)=>{
+    setores.findAll().then(setores => {
+        grupos_de_usuarios.findAll().then(grupos => {
+            res.render('inserir_usuarios',{
+                setores:setores,
+                grupos: grupos
+            })
+        })
+        
+    })    
+})
+app.post('/salvar_usuarios', async (req, res) => {
+    try {
+        const { nome, usuario, setor, grupo, senha } = req.body;
+        const ativo = 1;
 
-app.get('/listar_tipos_de_usuarios',(req,res)=>{
-    tipos_de_usuarios.findAll().then(tipos_user => {
-        res.render('listar_tipos_de_usuarios',{
-            tipos: tipos_user
+        // Gerando o salt e hash da senha
+        const salt = await bcrypt.genSalt(10); // Gera um salt com fator de custo 10
+        const senhaHash = await bcrypt.hash(senha, salt); // Criptografa a senha
+
+        await usuarios.create({
+            nome: nome,
+            usuario: usuario,
+            setor: setor,
+            grupo: grupo,
+            senha: senhaHash, // Salvando a senha criptografada
+            ativo: ativo
+        });
+
+        res.redirect('/listar_usuarios');
+    } catch (error) {
+        console.error("Erro ao salvar usuário:", error);
+        res.status(500).send("Erro ao salvar usuário.");
+    }
+});
+
+
+//GRUPOS DE USUARIOS
+app.get('/listar_grupos_de_usuarios',(req,res)=>{
+    grupos_de_usuarios.findAll().then(grupos_user => {
+        res.render('listar_grupos_de_usuarios',{
+            grupos: grupos_user
         })
     })
     
 })
-
-app.get('/inserir_tipos_de_usuarios',(req,res)=>{
-    res.render('inserir_tipos_de_usuarios')
+app.get('/inserir_grupos_de_usuarios',(req,res)=>{
+    res.render('inserir_grupos_de_usuarios')
 })
-app.post('/salvar_tipo_de_usuarios', (req, res)=>{
-    var tipo = req.body.tipousuario.toLowerCase()
+app.post('/salvar_grupos_de_usuarios', (req, res)=>{
+    var grupo = req.body.gruposusuario.toLowerCase()
     var inserir = req.body.inserir || 0
     var alterar = req.body.alterar || 0
     var deletar = req.body.deletar || 0
 
-    tipos_de_usuarios.create({
-        tipo: tipo,
+    grupos_de_usuarios.create({
+        grupo: grupo,
         inserir: inserir,
         alterar: alterar,
         deletar: deletar,
         ativo: 1
     }).then(()=>{
-        res.redirect('/listar_tipos_de_usuarios')
+        res.redirect('/listar_grupos_de_usuarios')
     })
 })
 
