@@ -1,0 +1,105 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+    <div class="container">
+
+
+
+        <div class="card mt-2">
+            
+            <div class="card-header">
+                Entidades
+            </div>
+            
+            <div class="card-header">
+                <a href="/inserir_entidades"><button class="btn btn-primary botao_inserir" id="botao_inserir">Inserir</button></a>
+                <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
+            </div>
+
+            <div id="valor_inserir" style="display: none;"><%= inserir %></div>
+            <div id="valor_deletar" style="display: none;"><%= deletar %></div>
+            <div id="valor_alterar" style="display: none;"><%= alterar %></div>
+            
+
+            <div class="card-body">
+
+                <div class="container">
+                    <% entidades.forEach((entidade) => { %>
+                        
+                      <div class="border-bottom py-2">
+                        <div class="row align-items-center">
+                          <div class="col-12 col-md"><strong>Cidade:</strong> <%= entidade.cidade %></div>
+                          <div class="col-12 col-md"><strong>Estado:</strong> <%= entidade.estado.toUpperCase() %></div>
+                          <div class="col-12 col-md"><strong>Tipo:</strong> <%= tipos.find(tipo => tipo.id === entidade.tipo_entidade)?.tipo_entidade || 'N/A' %></div>
+                          <div class="col-12 col-md"><strong>Versão:</strong> <%= versoes.find(versao => versao.id === entidade.versao_sistema)?.versao || 'N/A' %></div>
+                          <div class="col-auto ms-auto">
+                            <% if(deletar === 1 || alterar === 1){ %>
+                                <button class="btn btn-info btn-sm" onclick="carregaBtns('<%=entidade.id%>')" id="botaomais" >
+                                    <i class="fas fa-plus">+</i> <!-- Ícone de "+" -->
+                                </button>
+                            <%}%>
+                          </div>
+                        </div>
+                      
+                        <div style="display: none;" id="botoes-<%=entidade.id%>" class="mt-2">
+                          <form action="/deletar_entidade" method="post" class="flex">
+                              <% if(alterar === 1){%>
+                                  <div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                              <%}else {%>
+                                  <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                              <%}%>
+
+                              <% if(deletar === 1){%>
+                              
+                                      <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=entidade.id%>')" >Deletar</div>
+                                      
+                                                              
+                              <%}else {%>
+                                  <div style="display: none;" class="btn btn-danger btn-sm botao_deletar" name="botao_deletar">Deletar</div>
+                              <%}%>
+                              <input style="display: none;" type="hidden" name="id" value="<%=entidade.id%>"></input>
+                          </form> 
+                          
+                        </div>
+
+                      </div>
+                    <% }); %>
+                  </div>
+                  
+                 
+            </div>
+
+            <% if(totalPages > 0){%>
+                <div class="card-footer">
+
+                    <div class="d-flex justify-content-center">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                    <a class="page-link" href="/listar_entidades?page=<%= currentPage - 1 %>">Anterior</a>
+                                </li>
+                                
+                                <% for (let i = 1; i <= totalPages; i++) { %>
+                                    <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                        <a class="page-link" href="/listar_entidades?page=<%= i %>"><%= i %></a>
+                                    </li>
+                                <% } %>
+                        
+                                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                    <a class="page-link" href="/listar_entidades?page=<%= currentPage + 1 %>">Próximo</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        
+                    </div>
+                </div>
+            <%}%>
+
+        </div>
+        
+
+    </div>    
+</body>
+
+
+<%- include('partials/footer.ejs') %>

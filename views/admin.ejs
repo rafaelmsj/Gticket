@@ -3,16 +3,18 @@
 
 <body>
     <div class="container">
+
+       
         <div class="row justify-content-center">
-            <!-- Entidades -->
+           <!-- Entidades -->
             <div class="col-md-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fa fa-hourglass-half"></i>Entidades
+                    <div class="card-header text-black">
+                        <i class="fa fa-hourglass-half"></i><strong>Entidades</strong>
                     </div>
                     <div class="card-body" style="height: 200px; overflow-y: auto;">
-                        <a href="" class="d-block text-decoration-none text-dark py-2 border-bottom">Listar entidades</a>
-                        <a href="" class="d-block text-decoration-none text-dark py-2 border-bottom">Tipos de entidade</a>
+                        <a href="/listar_entidades" class="d-block text-decoration-none text-dark py-2 border-bottom">Listar entidades</a>
+                        <a href="/listar_tipos_entidade" class="d-block text-decoration-none text-dark py-2 border-bottom">Tipos de entidade</a>
                     </div>
                 </div>
             </div>
@@ -20,8 +22,8 @@
             <!-- Tickets -->
             <div class="col-md-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fa fa-hourglass-half"></i>Tickets
+                    <div class="card-header text-black">
+                        <i class="fa fa-hourglass-half"></i><strong>Tickets</strong>
                     </div>
                     <div class="card-body" style="height: 200px; overflow-y: auto;">
                         <a href="" class="d-block text-decoration-none text-dark py-2 border-bottom">Listar Tickets</a>
@@ -29,22 +31,54 @@
                     </div>
                 </div>
             </div>
-    
+        
+        </div>
+
+        <div class="row justify-content-center">
+        
+
             <!-- Configuração Sistema -->
             <div class="col-md-4 mb-3">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fa fa-hourglass-half"></i>Sistema
+                    <div class="card-header text-black">
+                        <i class="fa fa-hourglass-half"></i><strong>Sistema</strong>
                     </div>
                     <div class="card-body" style="height: 200px; overflow-y: auto;">
-                        <a href="/listar_usuarios" class="d-block text-decoration-none text-dark py-2 border-bottom">Usúarios</a>
-                        <a href="/listar_grupos_de_usuarios" class="d-block text-decoration-none text-dark py-2 border-bottom">Grupos de Usúario</a>
                         <a href="/listar_versaosis" class="d-block text-decoration-none text-dark py-2 border-bottom">Versão</a>
                         <a href="/listar_setor" class="d-block text-decoration-none text-dark py-2 border-bottom">Setor</a>
+                        <a href="/listar_concorrentes" class="d-block text-decoration-none text-dark py-2 border-bottom">Concorrentes</a>
+                        <a href="/listar_modulos" class="d-block text-decoration-none text-dark py-2 border-bottom">Módulos</a>
                     </div>
                 </div>
             </div>
+
+                <!-- Usuários -->
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <div class="card-header text-black">
+                        <i class="fa fa-hourglass-half"></i><strong>Usuários</strong>
+                    </div>
+                    <div class="card-body" style="height: 200px; overflow-y: auto;">
+                        <a href="/listar_usuarios" class="d-block text-decoration-none text-dark py-2 border-bottom">Usuários</a>
+                        <a href="/listar_grupos_de_usuarios" class="d-block text-decoration-none text-dark py-2 border-bottom">Grupos de Usuário</a>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <hr>
+
+        <div class="card">
+            <div class="card-header">
+                <strong>Ultimas Atualizações</strong>
+            </div>
+
+            <div class="card-body">
+
+            </div>
+        </div>
+
     </div>
     
 </body>

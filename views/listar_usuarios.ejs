@@ -4,40 +4,114 @@
     <div class="container">
         
         <div class="card mt-2">
-            
+
             <div class="card-header">
-                Usúarios
+                Usuários
             </div>
             
+            <div id="valor_inserir" style="display: none;"><%= inserir %></div>
+            <div id="valor_deletar" style="display: none;"><%= deletar %></div>
+            <div id="valor_alterar" style="display: none;"><%= alterar %></div>
+            
             <div class="card-header">
-                <a href="/inserir_usuarios"><button class="btn btn-primary">Inserir</button></a>
+                <a href="/inserir_usuarios"><button class="btn btn-primary botao_inserir" id="botao_inserir">Inserir</button></a>
                 <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
             </div>
-
+                        
+            
             <div class="card-body">
 
-                <table class="table table-striped">
-                    <thead>
-                      <tr>
-                        <th scope="col">Nome</th>
-                        <th scope="col">Setor</th>
-                        <th scope="col">Grupo</th>
-                        <th scope="col">Usúario</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <div class="container">
+                    <% usuarios.forEach((usuario) => { %>
+                      <div class="border-bottom py-2">
+                        <div class="row">
+                          <div class="col-12"><strong>Nome:</strong> <%= usuario.nome %></div>
+                        </div>
+                        
+                        <div class="row align-items-center">
 
-                     
-                    </tbody>
-                  </table>
+                          <div class="col-12 col-md"><strong>Usuário:</strong> <%= usuario.usuario %></div>  
+
+                          <% let group = ''; %>
+                          <% grupos.forEach((grupo) => { %>
+                            <% if (usuario.grupo == grupo.id) { %>
+                              <% group = grupo.grupo; %>
+                            <% } %>
+                          <% }); %>
+                          <div class="col-12 col-md"><strong>Grupo:</strong> <%= group %></div>
+                          <% let sector = ''; %>
+                          <% setores.forEach((setor) => { %>
+                            <% if (usuario.setor === setor.id) { %>
+                              <% sector = setor.setor; %>
+                            <% } %>
+                          <% }); %>
+                          <div class="col-12 col-md"><strong>Setor:</strong> <%= sector %></div>
+                          
+                          
+                          <div class="col-auto ms-auto">
+                            <% if (alterar === 1 || deletar === 1) { %>
+                              <button class="btn btn-info btn-sm" onclick="carregaBtns('<%=usuario.id%>')" id="botaomais">
+                                <i class="fas fa-plus">+</i>
+                              </button>
+                            <% } %>
+                          </div>
+                        </div>
+                  
+                        <div style="display: none;" id="botoes-<%=usuario.id%>" class="mt-2">
+                          <form action="/deletar_usuario" method="post" class="flex">
+                            <% if (alterar === 1) { %>
+                              <div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                            <% } else { %>
+                              <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                            <% } %>
+                  
+                            <% if (deletar === 1) { %>
+                              <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=usuario.id%>')">Deletar</div>
+                            <% } else { %>
+                              <div style="display: none;" class="btn btn-danger btn-sm botao_deletar">Deletar</div>
+                            <% } %>
+                            
+                            <input style="display: none;" type="hidden" name="id" value="<%=usuario.id%>">
+                          </form>
+                        </div>
+                      </div>
+                    <% }); %>
+                  </div>
+                  
+            
 
             </div>
 
+            <% if(totalPages > 0){%>
+              <div class="card-footer">
+
+                  <div class="d-flex justify-content-center">
+                      <nav aria-label="Page navigation">
+                          <ul class="pagination">
+                              <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                  <a class="page-link" href="/listar_usuarios?page=<%= currentPage - 1 %>">Anterior</a>
+                              </li>
+                              
+                              <% for (let i = 1; i <= totalPages; i++) { %>
+                                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                      <a class="page-link" href="/listar_usuarios?page=<%= i %>"><%= i %></a>
+                                  </li>
+                              <% } %>
+                      
+                              <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                  <a class="page-link" href="/listar_usuarios?page=<%= currentPage + 1 %>">Próximo</a>
+                              </li>
+                          </ul>
+                      </nav>
+                      
+                  </div>
+              </div>
+          <%}%>
 
         </div>
         
-
+       
     </div>    
 </body>
 
-<% include('partials/footer.ejs') %>
+<%- include('partials/footer.ejs') %>

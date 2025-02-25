@@ -4,3 +4,8 @@ body{
 header{
     margin-bottom: 5vh;
 }
+.msg_erro{
+    color: rgb(216, 49, 49);
+    font-size: 15px;
+    margin-top: -12px;
+}
