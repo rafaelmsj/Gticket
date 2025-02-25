@@ -40,14 +40,14 @@
                           <div style="display: none;" id="botoes-<%=concorrente.id%>" class="mt-2">
                             <form action="/deletar_concorrente" method="post" class="flex">
                                 <% if(alterar === 1){%>
-                                    <div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                                    <div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar" onclick="alterarConcorrente('<%=concorrente.id%>', '<%=concorrente.nome%>')">Alterar</div>
                                 <%}else {%>
                                     <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
                                 <%}%>
   
                                 <% if(deletar === 1){%>
                                 
-                                        <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=concorrente.id%>')" >Deletar</div>
+                                        <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=concorrente.id%>')">Deletar</div>
                                         
                                                                 
                                 <%}else {%>

@@ -1,36 +1,31 @@
-function conferenull() {
-    var inputs = document.querySelectorAll(".inputs"); // Seleciona todos os campos de input
-    var erros = document.querySelectorAll(".msg_erro"); // Seleciona todas as mensagens de erro
-    var form = document.querySelector("form"); // Seleciona o formulário
-    var valido = true; // Assume que o formulário está válido
 
-    // Percorre todos os inputs para validar
-    inputs.forEach((input, index) => {
-        if (input.value.trim() === "") { 
-            console.log('oi')
-            erros[index].style.display = "block";
-            valido = false; // Indica que há erro
-        } else {
-            erros[index].style.display = "none"; // Esconde a mensagem de erro se o campo for preenchido
+//FUNCOES DE APOIO
+{
+    //so insere no banco se campos nao for nulo
+    function conferenull() {
+        var inputs = document.querySelectorAll(".inputs"); // Seleciona todos os campos de input
+        var erros = document.querySelectorAll(".msg_erro"); // Seleciona todas as mensagens de erro
+        var form = document.querySelector("form"); // Seleciona o formulário
+        var valido = true; // Assume que o formulário está válido
+    
+        // Percorre todos os inputs para validar
+        inputs.forEach((input, index) => {
+            if (input.value.trim() === "") { 
+                console.log('oi')
+                erros[index].style.display = "block";
+                valido = false; // Indica que há erro
+            } else {
+                erros[index].style.display = "none"; // Esconde a mensagem de erro se o campo for preenchido
+            }
+        });
+    
+        // Se todos os campos estiverem preenchidos, submete o formulário
+        if (valido) {
+            form.submit();
         }
-    });
-
-    // Se todos os campos estiverem preenchidos, submete o formulário
-    if (valido) {
-        form.submit();
     }
 }
 
-function maiusculo(frase) {
-    // Divide a frase em palavras
-    let partes = frase.split(" ");
-    
-    // Para cada palavra, transforma a primeira letra em maiúscula
-    let resultado = partes.map(palavra => palavra.charAt(0).toUpperCase() + palavra.slice(1));
-    
-    // Junta as palavras de volta em uma única string
-    return resultado.join(" ");
-  }
 
 
 // Função que será chamada quando a página carregar
@@ -46,66 +41,62 @@ function habilitaDesabilitaBotoes() {
         btn_inserir.style.display = 'none';
     }
 
-    var valor_deletar = document.getElementById('valor_deletar').textContent.trim();
-    var valor_alterar = document.getElementById('valor_alterar').textContent.trim();
-
-    var botaomais = document.getElementById('botaomais')
-
-    if (valor_deletar == '0' && valor_alterar == '0'){
-        botaomais.style.display = 'none';
-    }
-
 }
 document.addEventListener("DOMContentLoaded", habilitaDesabilitaBotoes);
 
-async function carregarEstados() {
-    const response = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados");
-    const estados = await response.json();
-    const selectEstado = document.getElementById("estado");
 
-    estados.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordenar estados por nome
-    estados.forEach(estado => {
-        const option = document.createElement("option");
-        option.value = estado.sigla; // Define a sigla como valor
-        option.textContent = estado.nome;
-        selectEstado.appendChild(option);
-    });
-}
-
-async function carregarCidades(estadoSigla) {
-    if (!estadoSigla) return;
+//FUncoes de estado e cidade no cadastro de entidade
+{
+    async function carregarEstados() {
+        const response = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados");
+        const estados = await response.json();
+        const selectEstado = document.getElementById("estado");
     
-    // Buscar o estado pelo nome para obter o ID necessário para a API
-    const responseEstados = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados");
-    const estados = await responseEstados.json();
-    const estado = estados.find(e => e.sigla === estadoSigla);
-
-    if (!estado) return;
-
-    const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado.id}/municipios`);
-    const cidades = await response.json();
-    const selectCidade = document.getElementById("cidade");
-
-    selectCidade.innerHTML = '<option value="">Selecione uma cidade</option>';
-    cidades.forEach(cidade => {
-        const option = document.createElement("option");
-        option.value = cidade.nome; // Define o nome como valor
-        option.textContent = cidade.nome;
-        selectCidade.appendChild(option);
+        estados.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordenar estados por nome
+        estados.forEach(estado => {
+            const option = document.createElement("option");
+            option.value = estado.sigla; // Define a sigla como valor
+            option.textContent = estado.nome;
+            selectEstado.appendChild(option);
+        });
+    }
+    
+    async function carregarCidades(estadoSigla) {
+        if (!estadoSigla) return;
+        
+        // Buscar o estado pelo nome para obter o ID necessário para a API
+        const responseEstados = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados");
+        const estados = await responseEstados.json();
+        const estado = estados.find(e => e.sigla === estadoSigla);
+    
+        if (!estado) return;
+    
+        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado.id}/municipios`);
+        const cidades = await response.json();
+        const selectCidade = document.getElementById("cidade");
+    
+        selectCidade.innerHTML = '<option value="">Selecione uma cidade</option>';
+        cidades.forEach(cidade => {
+            const option = document.createElement("option");
+            option.value = cidade.nome; // Define o nome como valor
+            option.textContent = cidade.nome;
+            selectCidade.appendChild(option);
+        });
+    
+        selectCidade.disabled = false;
+    }
+    
+    document.getElementById("estado").addEventListener("change", function () {
+        const estadoSigla = this.value;
+        document.getElementById("cidade").innerHTML = '<option value="">Carregando...</option>';
+        document.getElementById("cidade").disabled = true;
+        carregarCidades(estadoSigla);
     });
-
-    selectCidade.disabled = false;
+    
+    carregarEstados();
 }
 
-document.getElementById("estado").addEventListener("change", function () {
-    const estadoSigla = this.value;
-    document.getElementById("cidade").innerHTML = '<option value="">Carregando...</option>';
-    document.getElementById("cidade").disabled = true;
-    carregarCidades(estadoSigla);
-});
-
-carregarEstados();
-
+//EXIBE BOTOES DAS FUNCOES ALTERAR E DELETAR
 function carregaBtns(id){
     var divbotoes = document.getElementById(`botoes-${id}`)
 
@@ -118,6 +109,7 @@ function carregaBtns(id){
     
 }
 
+//FAZ A CONFIRMAÇÃO SE O USUARIO QUER DELETAR O REGISTRO E MANDA O FORM PARA A ROTA
 function deletar(id){
     
     var form = document.querySelector("form"); // Seleciona o formulário
@@ -135,3 +127,16 @@ function deletar(id){
     }
 
 }
+
+//todas as funcoes de alterar
+
+function alterarConcorrente(id, nome){
+    var inputNome = document.getElementsByName('nome')[0];
+
+    // Redireciona para a nova rota
+    window.location.href = '/alterar_concorrentes';
+
+    // Atribui o valor correto ao input
+    inputNome.value = nome;
+}
+

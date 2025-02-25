@@ -444,6 +444,19 @@ app.post('/deletar_concorrente',(req,res)=>{
     })
 })
 
+app.get('/alterar_concorrentes/:id',(req,res)=>{
+    const id = req.params.id
+
+    concorrentes.findOne(
+        {where: {id:id}}
+    ).then(concorrentes =>{
+        res.render('alterar_concorrentes',{
+            concorrente: concorrentes
+        })
+    })
+    
+})
+
 
 
 //ROTAS PARA MODULOS DO SISTEMA
