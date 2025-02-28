@@ -1,0 +1,43 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+
+            <form action="/update_setor" class="form-control" method="post">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Alterar setor da empresa
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="setor" class="form-control form-control-lg inputs" value="<%=setor.setor%>"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="setor">Ex: Desenvolvimento, Importação, Suporte</label>
+                        <br>
+                        <input type="text" name="sigla" class="form-control form-control-lg inputs" value="<%=setor.sigla%>"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="sigla">Ex: DEV, IMP, SUP</label>
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_setor"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+                <input type="hidden" name="id" style="display: none;" value="<%=setor.id%>">
+            </form>
+            
+        </div>
+
+    </div>
+
+</body>
+
+<%- include('partials/footer.ejs') %>

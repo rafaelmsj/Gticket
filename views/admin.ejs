@@ -1,84 +1,193 @@
 <!--IMPORTANDO CABEÇALHO/NAVBAR-->
-<%- include('partials/head.ejs') %>
+<%- include('partials/head') %>
+
 
 <body>
-    <div class="container">
+    
+    <div class="wrapper">
+
+        <div class="container">
 
        
-        <div class="row justify-content-center">
-           <!-- Entidades -->
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-black">
-                        <i class="fa fa-hourglass-half"></i><strong>Entidades</strong>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <!-- Entidades -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-cogs"></i> <strong>Entidades</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="/listar_entidades" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-list"></i> Listar entidades
+                                </a>
+                                <a href="/listar_tipos_entidade" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-tags"></i> Tipos de entidade
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body" style="height: 200px; overflow-y: auto;">
-                        <a href="/listar_entidades" class="d-block text-decoration-none text-dark py-2 border-bottom">Listar entidades</a>
-                        <a href="/listar_tipos_entidade" class="d-block text-decoration-none text-dark py-2 border-bottom">Tipos de entidade</a>
+            
+                    <!-- Tickets -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-ticket-alt"></i> <strong>Tickets</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="#" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-list-alt"></i> Listar Tickets
+                                </a>
+                                <a href="#" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-cogs"></i> Tipos de Tickets
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="row justify-content-center">
+                    <!-- Sistema -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-tools"></i> <strong>Sistema</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="/listar_versaosis" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-cogs"></i> Versão
+                                </a>
+                                <a href="/listar_setor" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-building"></i> Setor
+                                </a>
+                                <a href="/listar_concorrentes" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-users"></i> Concorrentes
+                                </a>
+                                <a href="/listar_modulos" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-th-large"></i> Módulos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- Usuários -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-user"></i> <strong>Usuários</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="/listar_usuarios" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-users"></i> Usuários
+                                </a>
+                                <a href="/listar_grupos_de_usuarios" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-user-tag"></i> Grupos de Usuário
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            
     
-            <!-- Tickets -->
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-black">
-                        <i class="fa fa-hourglass-half"></i><strong>Tickets</strong>
-                    </div>
-                    <div class="card-body" style="height: 200px; overflow-y: auto;">
-                        <a href="" class="d-block text-decoration-none text-dark py-2 border-bottom">Listar Tickets</a>
-                        <a href="" class="d-block text-decoration-none text-dark py-2 border-bottom">Tipos de Tickets</a>
+            <hr>
+            <br>
+            <% 
+                let count = 0;
+                let count1 = 0;
+                let limit = 20;
+            %>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Últimas Atualizações</strong>
+                        </div>
+                        <div class="card-body" style="max-height: 300px; overflow-y: scroll;">
+                            
+                            <% logs.forEach((log) => { 
+                                if (count < limit && (log.acao == 'alterado' || log.acao == 'inserido' || log.acao == 'deletado')) { %>
+                                    <div>
+                                        O Usuário <strong><%= usuario.nome %></strong> 
+                                        <% if (log.acao == 'alterado') { %>
+                                            alterou o registro na página <%= log.tabela %>.
+                                            <br>
+                                            <div class="text-muted">
+                                                <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                    day: '2-digit', 
+                                                    month: '2-digit', 
+                                                    year: 'numeric', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                }).replace(',', ' às') %>
+                                            </div>
+                                        <% } else if (log.acao == 'inserido') { %>
+                                            inseriu um registro na página <%= log.tabela %>.
+                                            <br>
+                                            <div class="text-muted">
+                                                <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                    day: '2-digit', 
+                                                    month: '2-digit', 
+                                                    year: 'numeric', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                }).replace(',', ' às') %>
+                                            </div>
+                                        <% } else if (log.acao == 'deletado') { %>
+                                            deletou um registro na página <%= log.tabela %>.
+                                            <br>
+                                            <div class="text-muted">
+                                                <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                    day: '2-digit', 
+                                                    month: '2-digit', 
+                                                    year: 'numeric', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                }).replace(',', ' às') %>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <hr>
+                                    <% count++ %>
+                                <% } 
+                            }) %>
+                        </div>
                     </div>
                 </div>
-            </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Últimos Acessos</strong>
+                        </div>
+                        <div class="card-body" style="max-height: 300px; overflow-y: scroll;">
+                            
+                            <% logs.forEach((log) => { 
+                                if (count1 < limit && (log.acao == 'login' || log.acao == 'logout')) { %>
+                                    <div>
+                                        O Usuário <strong><%= usuario.nome %></strong> <%= log.acao == 'login' ? 'acessou o' : 'saiu do' %> sistema.
+                                        <br>
+                                        <div class="text-muted">
+                                            <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                day: '2-digit', 
+                                                month: '2-digit', 
+                                                year: 'numeric', 
+                                                hour: '2-digit', 
+                                                minute: '2-digit' 
+                                            }).replace(',', ' às') %>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <% count1++ %>
+                                <% } 
+                            }) %>
+                        </div>
+                    </div>
+                </div>
+                
+    
+        </div>
         
-        </div>
-
-        <div class="row justify-content-center">
-        
-
-            <!-- Configuração Sistema -->
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-black">
-                        <i class="fa fa-hourglass-half"></i><strong>Sistema</strong>
-                    </div>
-                    <div class="card-body" style="height: 200px; overflow-y: auto;">
-                        <a href="/listar_versaosis" class="d-block text-decoration-none text-dark py-2 border-bottom">Versão</a>
-                        <a href="/listar_setor" class="d-block text-decoration-none text-dark py-2 border-bottom">Setor</a>
-                        <a href="/listar_concorrentes" class="d-block text-decoration-none text-dark py-2 border-bottom">Concorrentes</a>
-                        <a href="/listar_modulos" class="d-block text-decoration-none text-dark py-2 border-bottom">Módulos</a>
-                    </div>
-                </div>
-            </div>
-
-                <!-- Usuários -->
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <div class="card-header text-black">
-                        <i class="fa fa-hourglass-half"></i><strong>Usuários</strong>
-                    </div>
-                    <div class="card-body" style="height: 200px; overflow-y: auto;">
-                        <a href="/listar_usuarios" class="d-block text-decoration-none text-dark py-2 border-bottom">Usuários</a>
-                        <a href="/listar_grupos_de_usuarios" class="d-block text-decoration-none text-dark py-2 border-bottom">Grupos de Usuário</a>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <hr>
-
-        <div class="card">
-            <div class="card-header">
-                <strong>Ultimas Atualizações</strong>
-            </div>
-
-            <div class="card-body">
-
-            </div>
-        </div>
-
     </div>
     
 </body>

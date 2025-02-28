@@ -6,31 +6,35 @@
     <title>admin</title>
     <link rel="shortcut icon" href="imgs/sistema/favicon_io/favicon-16x16.png" type="image/x-icon">
     <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <header>
-<!-- As a link -->
-  
 
-    <nav class="navbar navbar-light bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+    
       <a class="navbar-brand" href="/admin">
-        <img src="/imgs/sistema/logo-softcam.png" width="250" height="50" alt="">
+        <img src="/imgs/sistema/logo-softcam.png" width="250" height="50" alt="Logo Softcam">
       </a>
-
-      <div class="d-inline-flex border">
-        
-        <div class="d-inline-flex mr-2">
-          <img src="/imgs/sistema/noimage_vereador.jpg" width="50" height="50" alt="">
-        </div>
-        
-        <div class="user mr-2 ml-2">        
-          <strong><div class="nome">Rafael MAffei Silveira</strong>
-        <div class="setor">suporte</div>
       
-      </div>
-    </nav>
+      <div class="d-flex align-items-center ml-auto">
+        <div class="d-flex align-items-center mr-4">
+          <img src="/imgs/sistema/noimage_vereador.jpg" width="50" height="50" alt="" class="rounded-circle border border-muted">
+          <div class="ml-3">
+            <strong class="text-dark" style="font-size: 18px;"><%= nome %></strong>
+            <div class="text-muted" style="font-size: 14px;"><%= setornome %></div>
+          </div>
+        </div>
 
- 
+        <a href="/logout" class="d-flex align-items-center text-decoration-none">
+          <button class="btn btn-link p-0 text-primary" style="font-size: 20px;">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </a>
+      </div>
+    
+  </nav>
 
 </header>

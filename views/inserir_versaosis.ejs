@@ -2,30 +2,32 @@
 
 <body>
 
-    <div class="container">
+    <div class="wrapper">
+        <div class="container">
 
-        <form action="/salvarversao" class="form-control" method="post">
-            
-            <div class="card">
-            
-                <div class="card-header">
-                    Insira a versão do sistema
-                </div>
-
-                <div class="card-body">
-                    <input type="text" name="versaosis" class="form-control form-control-lg inputs"><br>
-                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    <label for="versaosis">Ex: Softcam, Plenus, Legislarr</label>
-                </div>
-
-                <div class="card-footer">
-                    <div onclick="conferenull()" class="btn btn-success">Salvar</div>
-                    <a href="/listar_versaosis"><div class="btn btn-secondary">Voltar</div></a>
-                </div>
+            <form action="/salvarversao" class="form-control" method="post">
                 
-            </div>
-        </form>
-        
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira a versão do sistema
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="versaosis" class="form-control form-control-lg inputs"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="versaosis">Ex: Softcam, Plenus, Legislarr</label>
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_versaosis"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+            </form>
+            
+        </div>
     </div>
 
 </body>

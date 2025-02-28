@@ -1,0 +1,53 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+    
+    <div class="wrapper">
+
+        <div class="container">
+
+            <form action="/update_grupos_de_usuarios" class="form-control" method="post">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Alterar Grupo de Usúrio
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="gruposusuario" class="form-control form-control-lg inputs" value="<%=grupo.grupo%>"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="gruposusuario">Ex: Administrador, Normal, Visualizar </label>
+                        <br>
+                        <br>
+                        <strong><p>Permissões</p></strong>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="inserir" value="1" <%= grupo.inserir ? 'checked' : '' %>>
+                            <label class="form-check-label" for="inserir">Inserir</label>
+                          </div>
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input" id="alterar" type="checkbox" name="alterar" value="1" <%= grupo.alterar ? 'checked' : '' %>>
+                            <label class="form-check-label" for="alterar">Alterar</label>
+                            
+                          </div>
+                          <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="deletar" value="1" <%= grupo.deletar ? 'checked' : '' %>>
+                            <label class="form-check-label" for="deletar">Deletar</label>
+                          </div>
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_grupos_de_usuarios"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+                <input type="hidden" name="id" style="display: none;" value="<%=grupo.id%>">
+            </form>
+            
+        </div>
+
+    </div>
+
+</body>
+<%- include('partials/footer.ejs') %>

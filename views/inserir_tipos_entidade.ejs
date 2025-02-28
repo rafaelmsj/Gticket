@@ -1,34 +1,39 @@
 <%- include('partials/head.ejs') %>
 
-
 <body>
-    <div class="container">
 
-        <form action="/salvar_tipos_entidade" class="form-control" method="post">
-            
-            <div class="card">
-            
-                <div class="card-header">
-                    Insira o tipo da entidade
-                </div>
+    <div class="wrapper">
 
-                <div class="card-body">
-                    <input type="text" name="tipo_entidade" class="form-control form-control-lg inputs"><br>
-                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    <label for="tipo_entidade">Ex: Câmara, Prefeitura</label>
-                   
+        <div class="container">
+
+            <form action="/salvar_tipos_entidade" class="form-control" method="post">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira o tipo da entidade
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="tipo_entidade" class="form-control form-control-lg inputs"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="tipo_entidade">Ex: Câmara, Prefeitura</label>
+                       
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_tipos_entidade"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
                     
                 </div>
+            </form>
+            
+        </div>
 
-                <div class="card-footer">
-                    <div onclick="conferenull()" class="btn btn-success">Salvar</div>
-                    <a href="/listar_tipos_entidade"><div class="btn btn-secondary">Voltar</div></a>
-                </div>
-                
-            </div>
-        </form>
-        
     </div>
+    
 </body>
 
 <%- include('partials/footer.ejs') %>

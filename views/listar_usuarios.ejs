@@ -1,20 +1,21 @@
 <%- include('partials/head.ejs') %>
 
 <body>
-    <div class="container">
-        
+
+  <div class="wrapper">
+
+      <div class="container">
+          
         <div class="card mt-2">
 
             <div class="card-header">
                 Usuários
             </div>
-            
-            <div id="valor_inserir" style="display: none;"><%= inserir %></div>
-            <div id="valor_deletar" style="display: none;"><%= deletar %></div>
-            <div id="valor_alterar" style="display: none;"><%= alterar %></div>
-            
+
             <div class="card-header">
-                <a href="/inserir_usuarios"><button class="btn btn-primary botao_inserir" id="botao_inserir">Inserir</button></a>
+              <% if(infoGrupo.inserir === 1){%>
+                  <a href="/inserir_usuarios"><button class="btn btn-primary botao_inserir" id="botao_inserir">Inserir</button></a>
+              <%}%>
                 <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
             </div>
                         
@@ -49,9 +50,9 @@
                           
                           
                           <div class="col-auto ms-auto">
-                            <% if (alterar === 1 || deletar === 1) { %>
+                            <% if(infoGrupo.deletar === 1 || infoGrupo.alterar === 1){ %>
                               <button class="btn btn-info btn-sm" onclick="carregaBtns('<%=usuario.id%>')" id="botaomais">
-                                <i class="fas fa-plus">+</i>
+                                <i class="fas fa-plus"></i>
                               </button>
                             <% } %>
                           </div>
@@ -59,14 +60,18 @@
                   
                         <div style="display: none;" id="botoes-<%=usuario.id%>" class="mt-2">
                           <form action="/deletar_usuario" method="post" class="flex">
-                            <% if (alterar === 1) { %>
-                              <div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                            <% if(infoGrupo.alterar === 1){%>
+                              <a href="/alterar_usuarios/<%=usuario.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
+                                <i class="fas fa-edit"></i> Alterar
+                              </div></a>
                             <% } else { %>
                               <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
                             <% } %>
                   
-                            <% if (deletar === 1) { %>
-                              <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=usuario.id%>')">Deletar</div>
+                            <% if(infoGrupo.deletar === 1){%>
+                              <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=usuario.id%>')">
+                                <i class="fas fa-trash-alt"></i> Deletar
+                              </div>
                             <% } else { %>
                               <div style="display: none;" class="btn btn-danger btn-sm botao_deletar">Deletar</div>
                             <% } %>
@@ -110,8 +115,11 @@
 
         </div>
         
-       
+      
     </div>    
+    
+  </div>
+    
 </body>
 
 <%- include('partials/footer.ejs') %>

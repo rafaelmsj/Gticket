@@ -128,15 +128,9 @@ function deletar(id){
 
 }
 
-//todas as funcoes de alterar
-
-function alterarConcorrente(id, nome){
-    var inputNome = document.getElementsByName('nome')[0];
-
-    // Redireciona para a nova rota
-    window.location.href = '/alterar_concorrentes';
-
-    // Atribui o valor correto ao input
-    inputNome.value = nome;
+function verificarAutenticacao(req, res, next) {
+    if (req.session.usuarioId) {
+        return next();
+    }
+    res.redirect('/login');
 }
-

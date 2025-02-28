@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="shortcut icon" href="imgs/sistema/favicon_io/favicon-16x16.png" type="image/x-icon">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<header></header>
+
+<br>
+<body>
+
+        <!-- Container para centralizar o conteúdo na tela -->
+        <div class="container vh-100 d-flex justify-content-center align-items-center">
+
+            <!-- Box de login -->
+            <div class="card p-4" style="width: 100%; max-width: 400px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+    
+                <!-- Título -->
+                <h3 class="text-center mb-4">Login</h3>
+    
+                <!-- Formulário -->
+                <form action="/login" method="POST">
+                    <!-- Campo de usuário -->
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">@</span>
+                        </div>
+                        <input name="usuario" type="text" class="form-control" placeholder="Usuário" aria-label="Username" aria-describedby="basic-addon1">
+                    </div>
+    
+                    <!-- Campo de senha -->
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon2">🔒</span>
+                        </div>
+                        <input name="senha" type="password" class="form-control" placeholder="Senha" aria-label="Password" aria-describedby="basic-addon2">
+                    </div>
+                    <% if (erro) { %>
+                       <div class="msg_erro">*<%= erro %></div>
+                    <% } %>
+                    <br>
+
+                    <!-- Botão de login -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" type="submit">Entrar</button>
+                    </div>
+                </form>
+    
+            </div>
+        </div>
+    
+</body>
+

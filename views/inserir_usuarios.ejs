@@ -2,73 +2,78 @@
 
 <body>
 
-    <div class="container">
+    <div class="wrapper">
 
-        <form action="/salvar_usuarios" class="form-control" method="post">
-            
-            <div class="card">
-            
-                <div class="card-header">
-                    Insira o Usuário
-                </div>
+        <div class="container">
 
-                <div class="card-body">
-                    <label for="gruposusuario"><strong>Nome:</strong></label>
-                    <input type="text" name="nome" class="form-control form-control-lg inputs" placeholder="Digite o nome"><br>
-                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    
-                    <br>
-                    <br>
-
-                    <label for="setor"><strong>Setor:</strong></label>
-                    <select class="form-control form-control-lg inputs" name="setor">
-                        <option value="" disabled selected="true">Selecione o Setor</option>
-                        <% setores.forEach((setor) => { %>
-                            <option value="<%= setor.id %>"><%= setor.setor %></option>
-                        <%})%>
-                    </select>
-                    <br>
-                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-
-                    <label for="grupo"><strong>Grupo:</strong></label>
-                    <select class="form-control form-control-lg inputs" name="grupo" id="">
-                        <option value="" disabled selected>Selecione o Grupo</option>
-                        <% grupos.forEach((grupo) => { %>
-                            <option value="<%= grupo.id %>"><%= grupo.grupo %></option>
-                        <%})%>
-                    </select>
-                    <br>
-                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    
-                    <br>
-                    <br>
-                    
-                        
-                    <div class="usr">
-                        <label for="usuario"><strong>Usúario:</strong></label>
-                        <input type="text" name="usuario" class="form-control form-control-lg inputs" placeholder="@username"><br>
-                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                        
-                    </div>
-
-                    <div class="pass">
-                        <label for="senha"><strong>Senha:</strong></label>
-                        <input type="password" name="senha" class="form-control form-control-lg inputs" placeholder="Digite a senha"><br>
-                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    </div>
-                       
-                    
-                    
-                </div>
-
-                <div class="card-footer">
-                    <div onclick="conferenull()" class="btn btn-success">Salvar</div>
-                    <a href="/listar_usuarios"><div class="btn btn-secondary">Voltar</div></a>
-                </div>
+            <form action="/salvar_usuarios" class="form-control" method="post">
                 
-            </div>
-        </form>
-        
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira o Usuário
+                    </div>
+    
+                    <div class="card-body">
+                        <label for="gruposusuario"><strong>Nome:</strong></label>
+                        <input type="text" name="nome" class="form-control form-control-lg inputs" placeholder="Digite o nome"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        
+                        <br>
+                        <br>
+    
+                        <label for="setor"><strong>Setor:</strong></label>
+                        <select class="form-control form-control-lg inputs" name="setor">
+                            <option value="" disabled selected="true">Selecione o Setor</option>
+                            <% setores.forEach((setor) => { %>
+                                <option value="<%= setor.id %>"><%= setor.setor %></option>
+                            <%})%>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+    
+                        <label for="grupo"><strong>Grupo:</strong></label>
+                        <select class="form-control form-control-lg inputs" name="grupo" id="">
+                            <option value="" disabled selected>Selecione o Grupo</option>
+                            <% grupos.forEach((grupo) => { %>
+                                <option value="<%= grupo.id %>"><%= grupo.grupo %></option>
+                            <%})%>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        
+                        <br>
+                        <br>
+                        
+                            
+                        <div class="usr">
+                            <label for="usuario"><strong>Usúario:</strong></label>
+                            <input type="text" name="usuario" class="form-control form-control-lg inputs" placeholder="@username"><br>
+                            <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                            
+                        </div>
+    
+                        <div class="pass">
+                            <label for="senha"><strong>Senha:</strong></label>
+                            <input type="password" name="senha" class="form-control form-control-lg inputs" placeholder="Digite a senha"><br>
+                            <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        </div>
+                           
+                        
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_usuarios"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+            </form>
+            
+        </div>
+    
+
     </div>
 
 </body>

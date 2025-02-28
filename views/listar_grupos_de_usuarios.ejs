@@ -1,101 +1,107 @@
 <%- include('partials/head.ejs') %>
 
 <body>
+
+  <div class="wrapper">
+
     <div class="container">
 
-        <div class="card mt-2">
-            
-            <div class="card-header">
-                Grupos de Usúario
-            </div>
-            
-            <div class="card-header">
-                <a href="/inserir_grupos_de_usuarios"><button class="btn btn-primary botao_inserir" id="botao_inserir">Inserir</button></a>
-                <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
-            </div>
+      <div class="card mt-2">
+          
+          <div class="card-header">
+              Grupos de Usúario
+          </div>
+          
+          <div class="card-header">
+            <% if(infoGrupo.inserir === 1){%>
+              <a href="/inserir_grupos_de_usuarios"><button class="btn btn-primary botao_inserir" id="botao_inserir">Inserir</button></a>
+            <%}%>
+            <a href="/admin"><div class="btn btn-secondary">Voltar</div></a>
+          </div>
 
-            <div id="valor_inserir" style="display: none;"><%= inserir %></div>
-            <div id="valor_deletar" style="display: none;"><%= deletar %></div>
-            <div id="valor_alterar" style="display: none;"><%= alterar %></div>
-            
+          <div class="card-body">
 
-            <div class="card-body">
-
-                <div class="container">
-                  <% grupos.forEach((grupo) => { %>
-                    <div class="border-bottom py-2">
-                      <div class="row">
-                        <div class="col-12"><strong>Grupo:</strong> <%= grupo.grupo %></div>
-                      </div>
+              <div class="container">
+                <% grupos.forEach((grupo) => { %>
+                  <div class="border-bottom py-2">
+                    <div class="row">
+                      <div class="col-12"><strong>Grupo:</strong> <%= grupo.grupo %></div>
+                    </div>
+                    
+                    <div class="row align-items-center">
+                      <div class="col-12 col-md"><strong>Inserir:</strong> <%= grupo.inserir === 1 ? 'Sim' : 'Não' %></div>
+                      <div class="col-12 col-md"><strong>Alterar:</strong> <%= grupo.alterar === 1 ? 'Sim' : 'Não' %></div>
+                      <div class="col-12 col-md"><strong>Excluir:</strong> <%= grupo.deletar === 1 ? 'Sim' : 'Não' %></div>
                       
-                      <div class="row align-items-center">
-                        <div class="col-12 col-md"><strong>Inserir:</strong> <%= grupo.inserir === 1 ? 'Sim' : 'Não' %></div>
-                        <div class="col-12 col-md"><strong>Alterar:</strong> <%= grupo.alterar === 1 ? 'Sim' : 'Não' %></div>
-                        <div class="col-12 col-md"><strong>Excluir:</strong> <%= grupo.deletar === 1 ? 'Sim' : 'Não' %></div>
+                      <div class="col-auto ms-auto">
+                        <% if(infoGrupo.deletar === 1 || infoGrupo.alterar === 1){ %>
+                          <button class="btn btn-info btn-sm" onclick="carregaBtns('<%=grupo.id%>')" id="botaomais">
+                            <i class="fas fa-plus"></i>
+                          </button>
+                        <% } %>
+                      </div>
+                    </div>
+
+                    <div style="display: none;" id="botoes-<%=grupo.id%>" class="mt-2">
+                      <form action="/deletar_grupo" method="post" class="flex">
+                        <% if(infoGrupo.alterar === 1){%>
+                          <a href="/alterar_grupo_de_usuario/<%=grupo.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
+                            <i class="fas fa-edit"></i> Alterar
+                          </div></a>
+                        <% } else { %>
+                          <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                        <% } %>
+
+                        <% if(infoGrupo.deletar === 1){%>
+                          <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=grupo.id%>')">
+                            <i class="fas fa-trash-alt"></i> Deletar
+                          </div>
+                        <% } else { %>
+                          <div style="display: none;" class="btn btn-danger btn-sm botao_deletar">Deletar</div>
+                        <% } %>
                         
-                        <div class="col-auto ms-auto">
-                          <% if (alterar === 1 || deletar === 1) { %>
-                            <button class="btn btn-info btn-sm" onclick="carregaBtns('<%=grupo.id%>')" id="botaomais">
-                              <i class="fas fa-plus">+</i>
-                            </button>
-                          <% } %>
-                        </div>
-                      </div>
-
-                      <div style="display: none;" id="botoes-<%=grupo.id%>" class="mt-2">
-                        <form action="/deletar_grupo" method="post" class="flex">
-                          <% if (alterar === 1) { %>
-                            <div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
-                          <% } else { %>
-                            <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
-                          <% } %>
-
-                          <% if (deletar === 1) { %>
-                            <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=grupo.id%>')">Deletar</div>
-                          <% } else { %>
-                            <div style="display: none;" class="btn btn-danger btn-sm botao_deletar">Deletar</div>
-                          <% } %>
-                          
-                          <input style="display: none;" type="hidden" name="id" value="<%=grupo.id%>">
-                        </form>
-                      </div>
-                </div>
-                <% }); %>
+                        <input style="display: none;" type="hidden" name="id" value="<%=grupo.id%>">
+                      </form>
+                    </div>
               </div>
-
-                  
-
+              <% }); %>
             </div>
 
-            <% if(totalPages > 0){%>
-              <div class="card-footer">
+                
 
-                  <div class="d-flex justify-content-center">
-                      <nav aria-label="Page navigation">
-                          <ul class="pagination">
-                              <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                                  <a class="page-link" href="/listar_grupos_de_usuarios?page=<%= currentPage - 1 %>">Anterior</a>
-                              </li>
-                              
-                              <% for (let i = 1; i <= totalPages; i++) { %>
-                                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                                      <a class="page-link" href="/listar_grupos_de_usuarios?page=<%= i %>"><%= i %></a>
-                                  </li>
-                              <% } %>
-                      
-                              <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                                  <a class="page-link" href="/listar_grupos_de_usuarios?page=<%= currentPage + 1 %>">Próximo</a>
-                              </li>
-                          </ul>
-                      </nav>
-                      
-                  </div>
-              </div>
-          <%}%>
+          </div>
 
-        </div>
+          <% if(totalPages > 0){%>
+            <div class="card-footer">
 
-    </div>    
+                <div class="d-flex justify-content-center">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                <a class="page-link" href="/listar_grupos_de_usuarios?page=<%= currentPage - 1 %>">Anterior</a>
+                            </li>
+                            
+                            <% for (let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                    <a class="page-link" href="/listar_grupos_de_usuarios?page=<%= i %>"><%= i %></a>
+                                </li>
+                            <% } %>
+                    
+                            <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                <a class="page-link" href="/listar_grupos_de_usuarios?page=<%= currentPage + 1 %>">Próximo</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    
+                </div>
+            </div>
+        <%}%>
+
+      </div>
+
+  </div>    
+
+  </div>
     
 </body>
 

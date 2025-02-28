@@ -1,0 +1,166 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+        
+        <div class="container">
+
+            <form action="/update_entidade" class="form-control" method="post">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Alterar entidade
+                    </div>
+    
+                    <div class="card-body">
+                        
+                        <label for="tipo_entidade" ><strong>Tipo de entidade:</strong></label>
+                        <select name="tipo_entidade" class="form-control form-control-lg inputs">
+    
+                        
+                            <% tipos.forEach((tipo_entidade) => { %>
+    
+                                <% if(tipo_entidade.id == entidade.tipo_entidade){%>
+                                    <option selected value="<%=entidade.tipo_entidade%>"><%=tipo_entidade.tipo_entidade%></option>
+                                <%}%>
+    
+                                <% if(tipo_entidade.ativo == 1 && tipo_entidade.id != entidade.tipo_entidade){ %>
+                                    <option value="<%= tipo_entidade.id %>"><%= tipo_entidade.tipo_entidade %></option>
+                                <%}%>
+                                
+                            <%})%>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+    
+                        <label for="estado" ><strong>Estado:</strong></label>
+                        <select disabled name="estado" id="estado" class="form-control form-control-lg inputs">
+                            <option value="<%=entidade.estado%>"><%=entidade.estado.toUpperCase()%></option>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                    
+                        <label for="cidade"><strong>Cidade:</strong></label>
+                        <select name="cidade" id="cidade" disabled class="form-control form-control-lg inputs">
+                            <option value="<%=entidade.cidade%>"><%=entidade.cidade.toUpperCase()%></option>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        
+                        <div class="container mt-4">
+                            <div class="row g-3 align-items-end"> 
+                                <div class="col-md-6">
+                                    <label for="modulos_contratados" class="form-label"><strong>Módulos Contratados</strong></label>
+                                    <select name="modulos_contratados" class="form-control form-control-lg inputs" multiple>
+    
+                                        <% modulos.forEach((modulo) => { %>
+    
+                                            <% var PartesModulos = entidade.modulos_contratados.split(', ') %>
+                                            
+                                            <% if (PartesModulos.includes(modulo.id.toString())) { %> 
+                                                <!-- Marca como selecionado apenas se o módulo estiver nos módulos contratados -->
+                                                <option selected value="<%= modulo.id %>"><%= modulo.modulo %></option>
+                                            <% } else if (modulo.ativo == 1) { %> 
+                                                <!-- Adiciona a opção apenas se o módulo estiver ativo e não contratado -->
+                                                <option value="<%= modulo.id %>"><%= modulo.modulo %></option>
+                                            <% } %>
+                                        
+                                        <% }) %>
+                                        
+                                                                          
+                                    </select>
+                                    <br>
+                                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                                </div>
+                    
+                                <div class="col-md-6">
+                                    <label for="versao_sistema" class="form-label"><strong>Versão do Sistema</strong></label>
+                                    <select name="versao_sistema" class="form-control form-control-lg inputs">
+                                        
+                                        <% versao_sistema.forEach((versao) => { %>
+    
+                                            <%if(versao.id == entidade.versao_sistema){%>
+                                                <option selected value="<%=entidade.versao_sistema%>"><%=versao.versao%></option>
+                                            <%}%>
+    
+                                            <% if(versao.ativo == 1 && versao.id != entidade.versao_sistema){ %>
+                                                <option value="<%= versao.id %>"><%= versao.versao %></option>
+                                            <%}%>
+                                
+                                        <%})%>
+                                    </select>
+                                    <br>
+                                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <br>
+                            <hr>
+                        <div class="container mt-4">
+                            <div class="row g-3 align-items-end"> 
+                                <div class="col-md-6">
+                                    <label for="website_concorrente" class="form-label"><strong>Website Concorrente</strong></label>
+                                    <select name="website_concorrente" class="form-control form-control-lg inputs">
+                                        <% concorrentes.forEach((concorrente) => { %>
+    
+                                            <% if(concorrente.id == entidade.website_concorrente){%>
+                                                <option selected value="<%=entidade.website_concorrente%>"><%=concorrente.nome%></option>
+                                            <%}%>
+    
+                                            <% if(concorrente.ativo == 1 && concorrente.id != entidade.website_concorrente){ %>
+                                                <option value="<%= concorrente.id %>"><%= concorrente.nome %></option>
+                                            <%}%>
+                                           
+                                        <%})%>
+                                    </select>
+                                    <br>
+                                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                                </div>
+                    
+                                <div class="col-md-6">
+                                    <label for="sistema_concorrente" class="form-label"><strong>Sistema Concorrente</strong></label>
+                                    <select name="sistema_concorrente" class="form-control form-control-lg inputs">
+                                        
+                                        <% concorrentes.forEach((concorrente) => { %>
+    
+                                            <% if(concorrente.id == entidade.sistema_concorrente){%>
+                                                <option selected value="<%=entidade.sistema_concorrente%>"><%=concorrente.nome%></option>
+                                            <%}%>
+    
+                                            <% if(concorrente.ativo == 1 && concorrente.id != entidade.sistema_concorrente){ %>
+                                                <option value="<%= concorrente.id %>"><%= concorrente.nome %></option>
+                                            <%}%>
+                                            
+                                        <%})%>
+                                    </select>
+                                    <br>
+                                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+    
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_entidades"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+    
+                <input type="hidden" name="id" style="display: none;" value="<%=entidade.id%>">
+            </form>
+            
+        </div>
+
+    </div>
+   
+</body>
+
+<%- include('partials/footer.ejs') %>

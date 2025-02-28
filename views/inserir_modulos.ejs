@@ -1,34 +1,39 @@
 <%- include('partials/head.ejs') %>
 
-
 <body>
-    <div class="container">
 
-        <form action="/salvar_modulos" class="form-control" method="post">
-            
-            <div class="card">
-            
-                <div class="card-header">
-                    Insira o módulo do sistema
-                </div>
+    <div class="wrapper">
 
-                <div class="card-body">
-                    <input type="text" name="modulo" class="form-control form-control-lg inputs"><br>
-                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    <label for="modulo">Ex: Processo Legislativo, Protoclo, Votação</label>
-                   
+        <div class="container">
+
+            <form action="/salvar_modulos" class="form-control" method="post">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira o módulo do sistema
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="modulo" class="form-control form-control-lg inputs"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="modulo">Ex: Processo Legislativo, Protoclo, Votação</label>
+                       
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_modulos"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
                     
                 </div>
+            </form>
+            
+        </div>
 
-                <div class="card-footer">
-                    <div onclick="conferenull()" class="btn btn-success">Salvar</div>
-                    <a href="/listar_modulos"><div class="btn btn-secondary">Voltar</div></a>
-                </div>
-                
-            </div>
-        </form>
-        
     </div>
+    
 </body>
 
 <%- include('partials/footer.ejs') %>

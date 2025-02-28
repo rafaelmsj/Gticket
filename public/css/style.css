@@ -9,3 +9,91 @@ header{
     font-size: 15px;
     margin-top: -12px;
 }
+
+
+/* Configurações gerais */
+.container {
+    margin-top: 30px;
+}
+
+/* Estilo dos cards */
+.card {
+    border-radius: 15px;
+    border: none;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.card-header {
+    background-color: #fff;
+    color: #495057;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Botões com ícones */
+.card-item {
+    font-size: 1rem;
+    color: #495057;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.card-item i {
+    margin-right: 10px;
+}
+
+/* Efeito de hover nos botões */
+.card-item:hover {
+    background-color: #007bff;
+    color: white;
+    transform: scale(1.05);
+}
+
+.card-item:active {
+    transform: scale(1.02);
+}
+
+
+
+/* Ajuste nos cards responsivos */
+.col-md-4 {
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .col-md-4 {
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+
+
+  /* Garantir que a página ocupe toda a altura da tela */
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  /* Usar flexbox para garantir que o footer fique no fim da tela */
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  /* Footer fixado na parte inferior */
+  .footer {
+    margin-top: auto;
+  }
+  

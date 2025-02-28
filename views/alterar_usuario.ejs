@@ -1,0 +1,96 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+
+            <form action="/update_usuarios" class="form-control" method="post">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Alterar Usuário
+                    </div>
+    
+                    <div class="card-body">
+                        <label for="gruposusuario"><strong>Nome:</strong></label>
+                        <input type="text" name="nome" class="form-control form-control-lg inputs" placeholder="Digite o nome" value="<%=usuario.nome%>"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        
+                        <br>
+                        <br>
+    
+                        <label for="setor"><strong>Setor:</strong></label>
+                        <select class="form-control form-control-lg inputs" name="setor">
+                           
+                            <% let sector = ''; %>
+                            <% setores.forEach((setor) => { %>
+                              <% if (usuario.setor === setor.id) { %>
+                                <% sector = setor.setor; %>
+                              <% } %>
+                            <% }); %>
+                           
+                            <option value="<%=usuario.setor%>" selected="true"><%=sector %></option>
+                            
+                            <% setores.forEach((setor) => { %>
+                                <% if(setor.ativo === 1 && setor.id != usuario.setor){ %>
+                                    <option value="<%= setor.id %>"><%= setor.setor %></option>
+                                <%}%>
+                            <%})%>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+    
+                        <label for="grupo"><strong>Grupo:</strong></label>
+                        <select disabled class="form-control form-control-lg inputs" name="grupo" id="">
+    
+                            <% let group = ''; %>
+                            <% grupos.forEach((grupo) => { %>
+                              <% if (usuario.grupo == grupo.id) { %>
+                                <% group = grupo.grupo; %>
+                              <% } %>
+                            <% }); %>
+    
+                            <option value="<%=usuario.grupo%>" selected><%= group %></option>
+                            <% grupos.forEach((grupo) => { %>
+                                <% if(grupo.ativo === 1 && grupo.id != usuario.grupo){ %>
+                                    <option value="<%= grupo.id %>"><%= grupo.grupo %></option>
+                                <%}%>
+                                
+                            <%})%>
+                        </select>
+                        <br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        
+                        <br>
+                        <br>
+                        
+                            
+                        <div class="usr">
+                            <label for="usuario"><strong>Usúario:</strong></label>
+                            <input type="text" value="<%=usuario.usuario%>" name="usuario" class="form-control form-control-lg inputs" placeholder="@username" ><br>
+                            <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                            
+                        </div>
+    
+                        
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_usuarios"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+                <input type="hidden" name="id" style="display: none;" value="<%=usuario.id%>">
+            </form>
+            
+        </div>
+
+    </div>
+
+</body>
+<%- include('partials/footer.ejs') %>
