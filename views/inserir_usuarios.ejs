@@ -5,7 +5,9 @@
     <div class="wrapper">
 
         <div class="container">
-
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;">
+                
+            </div>
             <form action="/salvar_usuarios" class="form-control" method="post">
                 
                 <div class="card">
@@ -18,9 +20,7 @@
                         <label for="gruposusuario"><strong>Nome:</strong></label>
                         <input type="text" name="nome" class="form-control form-control-lg inputs" placeholder="Digite o nome"><br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                        
-                        <br>
-                        <br>
+
     
                         <label for="setor"><strong>Setor:</strong></label>
                         <select class="form-control form-control-lg inputs" name="setor">
@@ -41,10 +41,8 @@
                         </select>
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                        
-                        <br>
-                        <br>
-                        
+
+                        <hr>
                             
                         <div class="usr">
                             <label for="usuario"><strong>Usúario:</strong></label>
@@ -53,18 +51,46 @@
                             
                         </div>
     
-                        <div class="pass">
-                            <label for="senha"><strong>Senha:</strong></label>
-                            <input type="password" name="senha" class="form-control form-control-lg inputs" placeholder="Digite a senha"><br>
-                            <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                        </div>
-                           
-                        
+                        <label for="senha"><strong>Senha:</strong></label>
+                        <div class="input-group">
+                              <input type="password" name="senha" class="form-control form-control-lg inputs camposenha" placeholder="Digite a senha">
+                             <div class="input-group-append">
+                                 <span id="toggleSenhaAntiga" class="input-group-text visualizaSenha" onclick="visualizaSenha()">
+                                     <i class="fas fa-eye"></i>
+                                 </span>
+                             </div>
+                         </div>
+                         <br>
+                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                       
+                        <label for="confirmar_senha"><strong>Confirmar Senha:</strong></label>
+                        <div class="input-group">
+                              <input type="password" name="confirmar_senha" class="form-control form-control-lg inputs camposenha" placeholder="Confirme a senha">
+                             <div class="input-group-append">
+                                 <span id="toggleSenhaAntiga" class="input-group-text visualizaSenha" onclick="visualizaSenha()">
+                                     <i class="fas fa-eye"></i>
+                                 </span>
+                             </div>
+                         </div>
+                         <br>
+                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <hr>
+                         <div class="permissoes ml-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="perm_usuarios">
+                                <label class="form-check-label" for="perm_usuarios">Permissão aba usúarios</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="perm_grupoUsuarios">
+                                <label class="form-check-label" for="perm_grupoUsuarios">Permissão aba grupo de usúarios</label>
+                              </div>
+                         </div>
+
                         
                     </div>
     
                     <div class="card-footer">
-                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <div onclick="cadastrarUsuario()" class="btn btn-success">Salvar</div>
                         <a href="/listar_usuarios"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
                     

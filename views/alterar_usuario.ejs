@@ -5,7 +5,7 @@
     <div class="wrapper">
 
         <div class="container">
-
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
             <form action="/update_usuarios" class="form-control" method="post">
                 
                 <div class="card">
@@ -15,12 +15,16 @@
                     </div>
     
                     <div class="card-body">
-                        <label for="gruposusuario"><strong>Nome:</strong></label>
-                        <input type="text" name="nome" class="form-control form-control-lg inputs" placeholder="Digite o nome" value="<%=usuario.nome%>"><br>
+                        <label for="nome"><strong>Nome:</strong></label>
+                        <input type="text" disabled name="nome" class="form-control form-control-lg inputs" placeholder="Digite o nome" value="<%=usuario.nome.toUpperCase()%>"><br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                         
-                        <br>
-                        <br>
+
+                        <div class="usr">
+                            <label for="usuario"><strong>Usúario:</strong></label>
+                            <input type="text" value="<%=usuario.usuario%>" name="usuario" class="form-control form-control-lg inputs" disabled><br>
+                            <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        </div>
     
                         <label for="setor"><strong>Setor:</strong></label>
                         <select class="form-control form-control-lg inputs" name="setor">
@@ -44,7 +48,7 @@
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
     
                         <label for="grupo"><strong>Grupo:</strong></label>
-                        <select disabled class="form-control form-control-lg inputs" name="grupo" id="">
+                        <select class="form-control form-control-lg inputs" name="grupo" id="">
     
                             <% let group = ''; %>
                             <% grupos.forEach((grupo) => { %>
@@ -63,24 +67,21 @@
                         </select>
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                        
-                        <br>
-                        <br>
-                        
-                            
-                        <div class="usr">
-                            <label for="usuario"><strong>Usúario:</strong></label>
-                            <input type="text" value="<%=usuario.usuario%>" name="usuario" class="form-control form-control-lg inputs" placeholder="@username" ><br>
-                            <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                            
-                        </div>
-    
-                        
-                        
+                        <hr>
+                        <div class="permissoes ml-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="perm_usuarios" value="1" <%= usuario.perm_usuarios ? 'checked' : '' %>>
+                                <label class="form-check-label" for="perm_usuarios">Permissão aba usúarios</label>
+                              </div>
+                              <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="perm_grupoUsuarios" value="1" <%= usuario.perm_grupo_usuarios ? 'checked' : '' %>>
+                                <label class="form-check-label" for="perm_grupoUsuarios">Permissão aba grupo de usúarios</label>
+                              </div>
+                         </div>
                     </div>
     
                     <div class="card-footer">
-                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <div onclick="updateUsuario()" class="btn btn-success">Salvar</div>
                         <a href="/listar_usuarios"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
                     

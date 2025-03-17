@@ -5,7 +5,7 @@
     <div class="wrapper">
 
         <div class="container">
-
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
             <form action="/update_grupos_de_usuarios" class="form-control" method="post">
                 
                 <div class="card">
@@ -37,7 +37,7 @@
                     </div>
     
                     <div class="card-footer">
-                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <div onclick="updateGrupodeUsuarios()" class="btn btn-success">Salvar</div>
                         <a href="/listar_grupos_de_usuarios"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
                     

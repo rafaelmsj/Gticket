@@ -6,14 +6,17 @@ header{
 }
 .msg_erro{
     color: rgb(216, 49, 49);
-    font-size: 15px;
-    margin-top: -12px;
+    font-size: 12px;
+    margin-top: -20px;
+    margin-left: 10px;
 }
-
+.visualizaSenha:hover {
+    background-color: #c7c7c7;
+}
 
 /* Configurações gerais */
 .container {
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 /* Estilo dos cards */
@@ -55,7 +58,7 @@ header{
 
 /* Efeito de hover nos botões */
 .card-item:hover {
-    background-color: #007bff;
+    background-color: #a1a1a1;
     color: white;
     transform: scale(1.05);
 }
@@ -96,4 +99,3 @@ header{
   .footer {
     margin-top: auto;
   }
-  

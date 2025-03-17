@@ -19,6 +19,14 @@ const usuarios = connection.define('usuarios',{
         type: sequelize.INTEGER,
         allowNull: false
     },
+    perm_grupo_usuarios: {
+        type: sequelize.INTEGER,
+        allowNull: false
+    },
+    perm_usuarios: {
+        type: sequelize.INTEGER,
+        allowNull: false
+    },
     senha:{
         type: sequelize.STRING,
         allowNull: false

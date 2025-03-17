@@ -5,7 +5,7 @@
     <div class="wrapper">
 
         <div class="container">
-
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
             <form action="/update_modulos" class="form-control" method="post">
                 
                 <div class="card">
@@ -23,7 +23,7 @@
                     </div>
     
                     <div class="card-footer">
-                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <div onclick="updateModulos()" class="btn btn-success">Salvar</div>
                         <a href="/listar_modulos"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
                     

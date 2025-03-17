@@ -44,6 +44,8 @@ app.use(async (req, res, next) => {
             res.locals.nome = req.session.nome;
             res.locals.setor = req.session.setor;
             res.locals.grupo = req.session.grupo;
+            res.locals.perm_t_usuarios = req.session.perm_usuarios;
+            res.locals.perm_t_grupos = req.session.perm_grupos;
         } else {
             res.locals.usuario = null;
             res.locals.nome = null;
@@ -58,17 +60,46 @@ app.use(async (req, res, next) => {
     }
 });
 
-//CRIA CONEXAO COM O BD
-connection
-    .authenticate()
-    .then(()=>{
-        console.log('Banco de dados conectado')
-    })
-    .catch((msgerro)=>{
-        console.log(msgerro)
-    })
+// Criando a conexão com o banco de dados
+connection.authenticate()
+    .then(async () => {
+        console.log('Banco de dados conectado');
 
+        // Verifica se o grupo padrão existe
+        const grupoExistente = await grupos_de_usuarios.findOne({ where: { grupo: 'administrador' } });
+        if (!grupoExistente) {
+            // Cria o grupo padrão, caso não exista
+            await grupos_de_usuarios.create({
+                grupo: 'administrador',
+                inserir: 1,
+                alterar: 1,
+                deletar: 1,
+                ativo: 1
+            });
+            console.log('Grupo Padrão criado com sucesso!');
+        }
 
+        // Verifica se o usuário padrão existe
+        const usuarioExistente = await usuarios.findOne({ where: { usuario: 'admin' } });
+        if (!usuarioExistente) {
+            // Cria o usuário padrão, caso não exista
+            const senhaCriptografada = await bcrypt.hash('admin', 10); // Criptografa a senha
+            await usuarios.create({
+                nome: 'administrador',
+                usuario: 'admin',
+                setor: 0,
+                grupo: 1,
+                perm_grupo_usuarios: 1,
+                perm_usuarios: 1,
+                senha: senhaCriptografada,
+                ativo: 1  // Usuário ativo
+            });
+            console.log('Usuário padrão criado com sucesso!');
+        }
+    })
+    .catch((msgerro) => {
+        console.log(msgerro);
+    });
 
 
 //ROTAS PRINCIPAIS
@@ -76,27 +107,18 @@ app.get('/',(req,res)=>{
     res.render('index')
 })
 
-app.get('/admin', verificarAutenticacao, async (req, res) => {
-    try {
-        const usuario = await usuarios.findByPk(req.session.usuarioId);
+app.get('/admin', verificarAutenticacao, (req, res) => {
 
-        if (usuario) {
-            log.findAll({
-                order: [['id','DESC']]
-            }).then(logs =>{
-                res.render('admin', {
-                     usuario ,
-                     logs: logs
-                    });
+    log.findAll({
+        order: [['id','DESC']]
+    }).then(logs => {
+        usuarios.findAll().then(usuarios => {
+            res.render('admin',{
+                usuarios: usuarios,
+                logs: logs
             })
-            
-        } else {
-            res.redirect('/login');
-        }
-    } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
-        res.status(500).send('Erro ao carregar a página');
-    }
+        })
+    })
 });
 
 
@@ -111,17 +133,19 @@ app.post('/login', async (req, res) => {
     try {
         const usuarioEncontrado = await usuarios.findOne({ where: { usuario } });
 
-        if (!usuarioEncontrado) {
-            return res.render('login', { erro: '' });
-        }
-
         if (usuarioEncontrado.ativo !== 1) {
-            return res.render('login', { erro: 'Usuário inativo' });
+            return res.json( {
+                success: false,
+                message: 'Usuário inativo'
+            });
         }
 
         const senhaValida = await bcrypt.compare(senha, usuarioEncontrado.senha);
         if (!senhaValida) {
-            return res.render('login', { erro: 'Senha incorreta' });
+            return res.json( {
+                success: false,
+                message: '*Senha inválida'
+            });
         }
 
         // Armazena informações na sessão
@@ -130,6 +154,9 @@ app.post('/login', async (req, res) => {
         req.session.nome = usuarioEncontrado.nome;
         req.session.setor = usuarioEncontrado.setor;
         req.session.grupo = usuarioEncontrado.grupo;
+        req.session.senha = usuarioEncontrado.senhaValida;
+        req.session.perm_usuarios = usuarioEncontrado.perm_usuarios;
+        req.session.perm_grupos = usuarioEncontrado.perm_grupo_usuarios;
 
         log.create({
             usuario: req.session.usuarioId,
@@ -137,7 +164,10 @@ app.post('/login', async (req, res) => {
             tabela: '',
             id_registro: 0
         }).then(()=>{
-            res.redirect('/admin');
+            res.json({
+                success: true,
+                message: 'Login efetuado!'
+            })
         })
         
     } catch (error) {
@@ -166,7 +196,38 @@ function verificarAutenticacao(req, res, next) {
     res.redirect('/login');
 }
 
+async function verificarPermInserir(req, res, next) {
+    var grupoEncontrado = await grupos_de_usuarios.findOne({
+        where: {id:req.session.grupo}
+    })
 
+    if(grupoEncontrado.inserir === 1){
+        return next();
+    }
+    res.redirect('/admin');
+}
+
+async function verificarPermAlterar(req, res, next) {
+    var grupoEncontrado = await grupos_de_usuarios.findOne({
+        where: {id:req.session.grupo}
+    })
+
+    if(grupoEncontrado.alterar === 1){
+        return next();
+    }
+    res.redirect('/admin');
+}
+
+async function verificarPermDeletar(req, res, next) {
+    var grupoEncontrado = await grupos_de_usuarios.findOne({
+        where: {id:req.session.grupo}
+    })
+
+    if(grupoEncontrado.deletar === 1){
+        return next();
+    }
+    res.redirect('/admin');
+}
 
 // ROTAS DAS ENTIDADES
 app.get('/listar_entidades',verificarAutenticacao, (req, res) => {
@@ -210,7 +271,7 @@ app.get('/listar_entidades',verificarAutenticacao, (req, res) => {
     });
 });
 
-app.get('/inserir_entidades',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_entidades',verificarAutenticacao, verificarPermInserir,(req,res)=>{
     tipos_entidade.findAll().then(tipos_entidade =>{
         modulos.findAll().then(modulos => {
             versao_sistema.findAll().then(versao_sistema => {
@@ -228,7 +289,7 @@ app.get('/inserir_entidades',verificarAutenticacao,(req,res)=>{
     
 })
 
-app.post('/salvar_entidades',verificarAutenticacao,(req,res)=>{
+app.post('/salvar_entidades',verificarAutenticacao,verificarPermInserir, async(req,res)=>{
     var cidade = req.body.cidade.toLowerCase()
     var estado = req.body.estado.toLowerCase()
     var tipo_entidade = req.body.tipo_entidade
@@ -238,29 +299,54 @@ app.post('/salvar_entidades',verificarAutenticacao,(req,res)=>{
     var sistema_concorrente = req.body.sistema_concorrente
     var ativo = 1
 
-    entidades.create({
-        cidade: cidade,
-        estado: estado,
-        website_concorrente: website_concorrente,
-        sistema_concorrente: sistema_concorrente,
-        tipo_entidade: tipo_entidade,
-        modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
-        versao_sistema: versao_sistema,
-        ativo: ativo
-    }).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'entidades',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_entidades')
-        })        
+    const entidadeEncontrada = await entidades.findOne({
+        where: {
+            cidade: cidade,
+            estado: estado,
+            tipo_entidade: tipo_entidade
+        }
     })
-    
+
+    if(entidadeEncontrada){
+        return res.status(400).json({
+            success: false,
+            message: 'Essa entidade já está cadastrada.'
+        })
+    }
+
+
+    try {
+        await entidades.create({
+            cidade: cidade,
+            estado: estado,
+            website_concorrente: website_concorrente,
+            sistema_concorrente: sistema_concorrente,
+            tipo_entidade: tipo_entidade,
+            modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
+            versao_sistema: versao_sistema,
+            ativo: ativo
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'entidades',
+                id_registro: 0
+            })
+                return res.json({
+                    success: true,
+                    message: 'Entidade cadastrada!'
+                })
+    }
+    catch(error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar entidade.',
+            error: error
+        })
+    }
 })
 
-app.post('/deletar_entidade',verificarAutenticacao, (req,res)=>{
+app.post('/deletar_entidade',verificarAutenticacao, verificarPermDeletar,(req,res)=>{
     var id = req.body.id
 
     entidades.update(
@@ -278,7 +364,7 @@ app.post('/deletar_entidade',verificarAutenticacao, (req,res)=>{
     })
 })
 
-app.get('/alterar_entidades/:id',verificarAutenticacao,(req,res)=>{
+app.get('/alterar_entidades/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
     const id = req.params.id
 
     entidades.findOne(
@@ -303,33 +389,42 @@ app.get('/alterar_entidades/:id',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.post('/update_entidade',verificarAutenticacao,(req,res)=>{
+app.post('/update_entidade',verificarAutenticacao,verificarPermAlterar, async(req,res)=>{
     const id = req.body.id
-    const tipo = req.body.tipo_entidade
     const modulos_contratados = req.body.modulos_contratados
     const versao = req.body.versao_sistema
     const website_concorrente = req.body.website_concorrente
     const sistema_concorrente = req.body.sistema_concorrente
 
-    entidades.update(
-        {
-            tipo_entidade: tipo,
-            modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
-            versao_sistema: versao,
-            website_concorrente: website_concorrente,
-            sistema_concorrente: sistema_concorrente
-        },
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'alterado',
-            tabela: 'entidades',
-            id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_entidades')
+    
+    try {
+        entidades.update(
+            {
+                modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
+                versao_sistema: versao,
+                website_concorrente: website_concorrente,
+                sistema_concorrente: sistema_concorrente
+            },
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'entidades',
+                id_registro: id
+            })
+                return res.json({
+                    success: true,
+                    message: 'Entidade alterada!'
+                })
+    }
+    catch(error){
+        return res.json({
+            success: false,
+            message: 'Erro ao alterar entidade.',
+            error: error
         })
-    })
+    }
 })
 
 
@@ -364,29 +459,62 @@ app.get('/listar_versaosis',verificarAutenticacao, (req,res)=>{
     })    
 })
 
-app.get('/inserir_versao',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_versao',verificarAutenticacao,verificarPermInserir,(req,res)=>{
     res.render('inserir_versaosis')
 })
 
-app.post('/salvarversao',verificarAutenticacao,(req,res)=>{
+app.post('/salvarversao',verificarAutenticacao,verificarPermInserir, async(req,res)=>{
     var versao = req.body.versaosis.toLowerCase().trim()
 
-    versao_sistema.create({
-        versao: versao,
-        ativo: 1
-    }).then(()=>{
+    const versaoEncontrada = await versao_sistema.findOne({
+        where: {
+           versao: versao,
+           ativo: 1 
+        }
+    })
+
+    if(versao.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite uma versão válida.'
+        })
+    }
+
+    if(versaoEncontrada){
+        return res.status(400).json({
+            success: false,
+            message: 'Versão já cadastrada.'
+        })
+    }
+
+    try {
+        await versao_sistema.create({
+            versao: versao,
+            ativo: 1
+        })
         log.create({
             usuario: res.locals.usuarioid,
             acao: 'inserido',
             tabela: 'versao_sistemas',
             id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_versaosis')
         })
-    })
+        
+            return res.json({
+                success: true,
+                message: 'Versão cadastrada!'
+            })
+
+    } catch (error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar versão',
+            error: error
+        })
+    }
+  
 })
 
-app.post('/deletar_versao',verificarAutenticacao, (req,res)=>{
+app.post('/deletar_versao',verificarAutenticacao, verificarPermDeletar,(req,res)=>{
     var id = req.body.id
 
     versao_sistema.update(
@@ -404,7 +532,7 @@ app.post('/deletar_versao',verificarAutenticacao, (req,res)=>{
     })
 })
 
-app.get('/alterar_versao/:id',verificarAutenticacao, (req,res)=>{
+app.get('/alterar_versao/:id',verificarAutenticacao,verificarPermAlterar, (req,res)=>{
     const id = req.params.id
 
     versao_sistema.findOne(
@@ -416,23 +544,57 @@ app.get('/alterar_versao/:id',verificarAutenticacao, (req,res)=>{
     })
 })
 
-app.post('/update_versao',verificarAutenticacao,(req,res)=>{
+app.post('/update_versao',verificarAutenticacao,verificarPermAlterar, async(req,res)=>{
     const id = req.body.id
-    const versao = req.body.versaosis
+    const versao = req.body.versaosis.trim()
 
-    versao_sistema.update(
-        {versao: versao},
-        {where: {id:id}}
-    ).then(()=>{
+    const versaoEncontrada = await versao_sistema.findOne({
+        where: {
+            versao: versao,
+            ativo: 1
+        }
+    })
+
+    if(versao.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite uma versão válida.'
+        })
+    }
+
+    if(versaoEncontrada){
+        return res.status(400).json({
+            success: false,
+            message: 'Versão já cadastrada.'
+        })
+    }
+
+    try {
+        await     versao_sistema.update(
+            {versao: versao},
+            {where: {id:id}}
+        )
         log.create({
             usuario: res.locals.usuarioid,
             acao: 'alterado',
             tabela: 'versao_sistemas',
             id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_versaosis')
         })
-    })
+            return res.json({
+                success: true,
+                message: 'Versão alterada!'
+            })
+    }
+    catch (error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao alterar versão',
+            error: error
+        })
+    }
+
+
+
 })
 
 
@@ -468,32 +630,86 @@ app.get('/listar_setor',verificarAutenticacao,(req,res)=>{
     
 })
 
-app.get('/inserir_setor',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_setor',verificarAutenticacao,verificarPermInserir,(req,res)=>{
     res.render('inserir_setor')
 })
 
-app.post('/salvarsetor',verificarAutenticacao,(req,res)=>{
+app.post('/salvarsetor',verificarAutenticacao,verificarPermInserir, async(req,res)=>{
     var setor = req.body.setor.toLowerCase()
     var sigla = req.body.sigla.toLowerCase()
     var ativo = 1
 
-    setores.create({
-        setor: setor,
-        sigla: sigla,
-        ativo: ativo
-    }).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'setores',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_setor')
-        })
+    const setorEncontrado = await setores.findOne({
+        where: {
+            setor: setor,
+            ativo: 1
+        }
     })
+
+    if(setor.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um setor válido.'
+        })
+    }
+
+    if (setorEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Setor já cadastrado.'
+        })
+    }
+
+    const siglaEncontrado = await setores.findOne({
+        where: {
+            sigla: sigla,
+            ativo: 1
+        }
+    })
+
+    if(sigla.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite uma sigla válida.'
+        })
+    }
+
+    if (siglaEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Essa sigla já está em uso.'
+        })
+    }
+
+    try {
+        await setores.create({
+            setor: setor,
+            sigla: sigla,
+            ativo: ativo
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'setores',
+                id_registro: 0
+            })
+                return res.json({
+                    success: true,
+                    message: 'Setor cadastrado!'
+                })
+
+    }
+    catch(error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar setor',
+            error: error
+        })
+    }
+
 })
 
-app.post('/deletar_setor',verificarAutenticacao, (req,res)=>{
+app.post('/deletar_setor',verificarAutenticacao, verificarPermDeletar,(req,res)=>{
     var id = req.body.id
 
     setores.update(
@@ -511,7 +727,7 @@ app.post('/deletar_setor',verificarAutenticacao, (req,res)=>{
     })
 })
 
-app.get('/alterar_setor/:id',verificarAutenticacao, (req,res)=>{
+app.get('/alterar_setor/:id',verificarAutenticacao,verificarPermAlterar, (req,res)=>{
     const id = req.params.id
 
     setores.findOne(
@@ -523,179 +739,378 @@ app.get('/alterar_setor/:id',verificarAutenticacao, (req,res)=>{
     })
 })
 
-app.post('/update_setor',verificarAutenticacao,(req,res)=>{
-    const setor = req.body.setor
-    const sigla = req.body.sigla
+app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
+    const setor = req.body.setor.toLowerCase()
+    const sigla = req.body.sigla.toLowerCase()
     const id = req.body.id
 
-    setores.update(
-        {setor: setor, sigla: sigla},
-        {where: {id:id}}
-    ).then(()=>{
+    const setorEncontrado = await setores.findOne({
+        where: {
+            setor: setor,
+            sigla: sigla,
+            ativo: 1
+        }
+    })
+
+    if(setor.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um setor válido.'
+        })
+    }
+
+    if (setorEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Setor já cadastrado.'
+        })
+    }
+
+
+    try {
+        await setores.update(
+            {setor: setor, sigla: sigla},
+            {where: {id:id}}
+        )
         log.create({
             usuario: res.locals.usuarioid,
             acao: 'alterado',
             tabela: 'setores',
             id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_setor')
         })
-    })
+            res.json({
+                success: true,
+                message: 'Setor alterado!'
+            })
+    }
+    catch(error){
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao alterar setor.',
+            error: error
+        })
+    }
+
 })
 
 
 //ROTAS DE USUARIOS
-app.get('/listar_usuarios',verificarAutenticacao,(req,res)=>{
-    const page = parseInt(req.query.page) || 1;
-    const limit = 20;
-    const offset = (page - 1) * limit;
-    const idUsuario = req.session.usuarioId
-    const idGrupo = req.session.grupo
+    app.get('/listar_usuarios',verificarAutenticacao,(req,res)=>{
+        const page = parseInt(req.query.page) || 1;
+        const limit = 20;
+        const offset = (page - 1) * limit;
+        const idUsuario = req.session.usuarioId
+        const idGrupo = req.session.grupo
+        
+
+        if(req.session.perm_usuarios !== 1){
+            return res.status(400).json({
+                success:false,
+                message: 'Você não tem permissão para acessar esta página.'
+            })
+        }
+
+        usuarios.findAndCountAll({
+            where: {ativo: 1},
+            order: [['nome','ASC']],
+            limit: limit,
+            offset: offset
+        }).then(usuariosGeral=>{
+            usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
+                grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
+                    const totalPages = Math.ceil(usuariosGeral.count / limit)
+                    setores.findAll().then(setores =>{
+                        grupos_de_usuarios.findAll().then(grupos => {
+                            res.render('listar_usuarios',{
+                                usuarios: usuariosGeral.rows,
+                                currentPage: page,
+                                totalPages: totalPages,
+                                infoUser: usuarioinfo,
+                                infoGrupo: grupoinfo,
+                                setores: setores,
+                                grupos: grupos
+                            })    
+                        })
+                    })
+                })
+            })    
+            
+        })
+
+        
+    
+        
+        
+    })
+
+    app.get('/inserir_usuarios',verificarAutenticacao,verificarPermInserir,(req,res)=>{
+        setores.findAll().then(setores => {
+            grupos_de_usuarios.findAll({
+                where: {ativo: 1}
+            }).then(grupos => {
+                res.render('inserir_usuarios',{
+                    setores:setores,
+                    grupos: grupos
+                })
+            })
+            
+        })    
+    })
+
+    app.post('/salvar_usuarios',verificarAutenticacao,verificarPermInserir, async (req, res) => {
+        try {
+            const { nome, usuario, setor, grupo, senha, confirmar_senha, perm_usuarios, perm_grupoUsuarios } = req.body;
+            const ativo = 1;
+
+            // Gerando o salt e hash da senha
+            const salt = await bcrypt.genSalt(10); // Gera um salt com fator de custo 10
+            const senhaHash = await bcrypt.hash(senha, salt); // Criptografa a senha
 
 
-    usuarios.findAndCountAll({
-        where: {ativo: 1},
-        order: [['nome','ASC']],
-        limit: limit,
-        offset: offset
-    }).then(usuariosGeral=>{
-        usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
-            grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
-                const totalPages = Math.ceil(usuariosGeral.count / limit)
-                setores.findAll().then(setores =>{
-                    grupos_de_usuarios.findAll().then(grupos => {
-                        res.render('listar_usuarios',{
-                            usuarios: usuariosGeral.rows,
-                            currentPage: page,
-                            totalPages: totalPages,
-                            infoUser: usuarioinfo,
-                            infoGrupo: grupoinfo,
-                            setores: setores,
-                            grupos: grupos
-                        })    
+            
+            if(nome.trim().length < 3){
+                return res.status(400).json({
+                    success: false,
+                    message: 'Digite um nome valido.'
+                })
+            }
+            
+            if(usuario.trim().length < 3){
+                return res.status(400).json({
+                    success: false,
+                    message: 'Digite um usúario valido.'
+                })
+            }
+
+            if(senha.length < 6){
+                return res.status(400).json({
+                    success: false,
+                    message: 'A senha deve ter pelomenos 6 digitos.'
+                })
+            }
+
+            if(senha !== confirmar_senha){
+                return res.status(400).json({
+                    success: false,
+                    message: 'As senhas não conferem.'
+                })
+            }
+
+            //VERIFICA SE O USUARIO JA ESTA CADASTRADO
+            const userExistente = await usuarios.findOne({where: {usuario: usuario.toLowerCase().trim()}})
+
+            if (userExistente){
+                return res.status(400).json({
+                    success: false,
+                    message: 'Este usúario já esta cadastrado.'
+                })
+            }
+
+            //VERIFICA SE JA TEM ESSE NOME CADASTRADO
+            const nomeExistente = await usuarios.findOne({where: {nome: nome.toLowerCase().trim()}})
+
+            if(nomeExistente){
+                return res.status(400).json({
+                    success: false,
+                    message: 'Esse nome já está vinculado a um usúario.'
+                })
+            }
+
+
+            await usuarios.create({
+                nome: nome.toLowerCase().trim(),
+                usuario: usuario.toLowerCase().trim(),
+                setor: setor,
+                perm_grupo_usuarios: perm_grupoUsuarios,
+                perm_usuarios: perm_usuarios,
+                grupo: grupo,
+                senha: senhaHash,
+                ativo: ativo
+            });
+
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'usuarios',
+                id_registro: 0
+            }).then(()=>{
+                return res.json({ success: true, message: 'Usúario criado!' });
+            })
+        } catch (error) {
+            console.error("Erro ao salvar usuário:", error);
+            res.status(500).send("Erro ao salvar usuário.");
+        }
+    });
+
+    app.post('/deletar_usuario',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
+        var id = req.body.id
+
+        usuarios.update(
+            {ativo: 0},
+            {where: {id:id}}
+        ).then(()=>{
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'deletado',
+                tabela: 'usuarios',
+                id_registro: id
+            }).then(()=>{
+                res.redirect('/listar_usuarios')
+            })
+        })
+    })
+
+    app.get('/alterar_usuarios/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
+        const id = req.params.id
+
+        usuarios.findOne(
+            {where: {id:id}}
+        ).then(usuario => {
+            setores.findAll().then(setores =>{
+                grupos_de_usuarios.findAll().then(grupos =>{
+
+                    res.render('alterar_usuario',{
+                        usuario: usuario,
+                        setores: setores,
+                        grupos:grupos
                     })
                 })
             })
-         })    
-        
+
+        })
     })
-    
-})
 
-app.get('/inserir_usuarios',verificarAutenticacao,(req,res)=>{
-    setores.findAll().then(setores => {
-        grupos_de_usuarios.findAll({
-            where: {ativo: 1}
-        }).then(grupos => {
-            res.render('inserir_usuarios',{
-                setores:setores,
-                grupos: grupos
-            })
-        })
+    app.post('/update_usuarios',verificarAutenticacao,verificarPermAlterar, async(req,res)=>{
+        const id = req.body.id
+        const setor = req.body.setor
+        const grupo = req.body.grupo
+        const perm_usuarios = req.body.perm_usuarios
+        const perm_grupoUsuarios = req.body.perm_grupoUsuarios
         
-    })    
+        try {
+            await usuarios.update(
+                {setor: setor,
+                grupo: grupo,
+                perm_grupo_usuarios: perm_grupoUsuarios,
+                perm_usuarios: perm_usuarios},
+                {where: {id:id}}
+            )
+                log.create({
+                    usuario: res.locals.usuarioid,
+                    acao: 'alterado',
+                    tabela: 'usuarios',
+                    id_registro: id
+                })
+                    res.json({
+                        success: true,
+                        message: 'Usúario alterado!'
+                    })
+        }
+        catch(error){
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao alterar usúario',
+                error: error
+            })
+        }
+
+    })
+
+
+
+//ROTAS DE CONFIGURAÇÃO DE USUARIO
+app.get('/configurar_usuario',verificarAutenticacao,(req,res)=>{
+    const idUsuario = req.session.usuarioId
+
+    usuarios.findOne(
+        {where: {id: idUsuario}}
+    ).then(usuario =>{
+        res.render('configurar_usuario',{
+            usuario: usuario,
+            erro: null
+        })
+    })
+
 })
 
-app.post('/salvar_usuarios',verificarAutenticacao, async (req, res) => {
+app.post('/alterar_password', async (req, res) => {
+    const senhaOld = req.body.senhaAntiga; // Senha antiga fornecida pelo usuário
+    const senhaNew = req.body.novaSenha;   // Nova senha fornecida pelo usuário
+    const senhaNew2 = req.body.confirmarNovaSenha; // Confirmação da nova senha fornecida pelo usuário
+    const idUser = req.session.usuarioId; // ID do usuário logado (assumindo que você usa sessões)
+
+    // Primeiro, verificar se todos os campos foram preenchidos
+    if (!senhaOld || !senhaNew || !senhaNew2) {
+        return res.status(400).json({ success: false, message: 'Todos os campos devem ser preenchidos.' });
+    }
+
+    // Verificar se as novas senhas coincidem
+    if (senhaNew !== senhaNew2) {
+        return res.status(400).json({ success: false, message: 'As senhas não coincidem.' });
+    }
+
+    if (senhaNew.length == 1) {
+        return res.status(400).json({ success: false, message: 'Campo Obrigatório' });
+    }
+
+    // Verificar se a nova senha tem pelo menos 6 caracteres
+    if (senhaNew.length > 2 && senhaNew.length < 6) {
+        return res.status(400).json({ success: false, message: 'A nova senha deve ter pelo menos 6 caracteres.' });
+    }
+
     try {
-        const { nome, usuario, setor, grupo, senha } = req.body;
-        const ativo = 1;
+        // Encontrar o usuário no banco de dados
+        const usuario = await usuarios.findOne({ where: { id: idUser } });
 
-        // Gerando o salt e hash da senha
-        const salt = await bcrypt.genSalt(10); // Gera um salt com fator de custo 10
-        const senhaHash = await bcrypt.hash(senha, salt); // Criptografa a senha
+        // Se o usuário não for encontrado
+        if (!usuario) {
+            return res.status(404).json({ success: false, message: 'Usuário não encontrado.' });
+        }
 
-        await usuarios.create({
-            nome: nome.toLowerCase(),
-            usuario: usuario.toLowerCase(),
-            setor: setor,
-            grupo: grupo,
-            senha: senhaHash, // Salvando a senha criptografada
-            ativo: ativo
-        });
+        // Verificar se a senha antiga está correta
+        const senhaOK = await bcrypt.compare(senhaOld, usuario.senha);
 
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'usuarios',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_usuarios')
-        })
+        // Se a senha antiga não for correta
+        if (!senhaOK) {
+            return res.status(400).json({ success: false, message: 'Senha antiga incorreta.' });
+        }
+
+        const novaSenhaOK = await bcrypt.compare(senhaNew, usuario.senha);
+        if(novaSenhaOK){
+            return res.status(400).json({success: false, message: 'Você já está utilizando esta senha.'})
+        }
+
+        // Caso tudo esteja correto, fazer o update da senha
+        const novaSenhaHash = await bcrypt.hash(senhaNew, 10); // Criptografar a nova senha
+
+        // Atualizar a senha do usuário no banco de dados
+        await usuarios.update({ senha: novaSenhaHash }, { where: { id: idUser } });
+
+        // Enviar resposta de sucesso
+        return res.json({ success: true, message: 'Senha alterada com sucesso!' });
     } catch (error) {
-        console.error("Erro ao salvar usuário:", error);
-        res.status(500).send("Erro ao salvar usuário.");
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Erro ao alterar a senha.' });
     }
 });
 
-app.post('/deletar_usuario',verificarAutenticacao,(req,res)=>{
-    var id = req.body.id
-
-    usuarios.update(
-        {ativo: 0},
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'deletado',
-            tabela: 'usuarios',
-            id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_usuarios')
-        })
-    })
-})
-
-app.get('/alterar_usuarios/:id',verificarAutenticacao,(req,res)=>{
-    const id = req.params.id
-
-    usuarios.findOne(
-        {where: {id:id}}
-    ).then(usuario => {
-        setores.findAll().then(setores =>{
-            grupos_de_usuarios.findAll().then(grupos =>{
-
-                res.render('alterar_usuario',{
-                    usuario: usuario,
-                    setores: setores,
-                    grupos:grupos
-                })
-            })
-        })
-
-    })
-})
-
-app.post('/update_usuarios',verificarAutenticacao,(req,res)=>{
-    const id = req.body.id
-    const nome = req.body.nome
-    const setor = req.body.setor
-    const grupo = req.body.grupo
-    const usuario = req.body.usuario
-
-    usuarios.update(
-        {nome: nome, setor: setor, grupo: grupo, usuario: usuario},
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'alterado',
-            tabela: 'usuarios',
-            id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_usuarios')
-        })
-    })
-})
 
 
 //GRUPOS DE USUARIOS
+
 app.get('/listar_grupos_de_usuarios',verificarAutenticacao,(req,res)=>{
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
     const idUsuario = req.session.usuarioId
     const idGrupo = req.session.grupo
+
+    if(req.session.perm_grupos !== 1){
+        return res.status(400).json({
+            success:false,
+            message: 'Você não tem permissão para acessar esta página.'
+        })
+    }
 
 
     grupos_de_usuarios.findAndCountAll({
@@ -715,41 +1130,74 @@ app.get('/listar_grupos_de_usuarios',verificarAutenticacao,(req,res)=>{
                     infoGrupo: grupoinfo
                 })
             })
-         })    
+        })    
 
     })
     
+    
 })
 
-app.get('/inserir_grupos_de_usuarios',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_grupos_de_usuarios',verificarAutenticacao,verificarPermInserir,(req,res)=>{
     res.render('inserir_grupos_de_usuarios')
 })
 
-app.post('/salvar_grupos_de_usuarios',verificarAutenticacao,(req, res)=>{
+app.post('/salvar_grupos_de_usuarios',verificarAutenticacao,verificarPermInserir, async(req, res)=>{
     var grupo = req.body.gruposusuario.toLowerCase()
-    var inserir = req.body.inserir || 0
-    var alterar = req.body.alterar || 0
-    var deletar = req.body.deletar || 0
+    var inserir = req.body.inserir
+    var alterar = req.body.alterar
+    var deletar = req.body.deletar
 
-    grupos_de_usuarios.create({
-        grupo: grupo,
-        inserir: inserir,
-        alterar: alterar,
-        deletar: deletar,
-        ativo: 1
-    }).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'grupos_de_usuarios',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_grupos_de_usuarios')
-        })
+    const grupoEncontrado = await grupos_de_usuarios.findOne({
+        where: {
+            grupo: grupo,
+            ativo: 1
+        }
     })
+
+    if (grupo.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um grupo de usúarios válido.'
+        })
+    }
+
+    if(grupoEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse grupo de usúarios já esta cadastrado.'
+        })
+    }
+
+
+    try {
+        await grupos_de_usuarios.create({
+            grupo: grupo,
+            inserir: inserir,
+            alterar: alterar,
+            deletar: deletar,
+            ativo: 1
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'grupos_de_usuarios',
+                id_registro: 0
+            })
+                return res.json({
+                    success: true,
+                    message: 'Grupo de usúarios cadastrado!'
+                })
+    }
+    catch(error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar grupo de usúarios'
+        })
+    }
+
 })
 
-app.post('/deletar_grupo',verificarAutenticacao,(req,res)=>{
+app.post('/deletar_grupo',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
     var id = req.body.id
 
     grupos_de_usuarios.update(
@@ -768,7 +1216,7 @@ app.post('/deletar_grupo',verificarAutenticacao,(req,res)=>{
 
 })
 
-app.get('/alterar_grupo_de_usuario/:id',verificarAutenticacao,(req,res)=>{
+app.get('/alterar_grupo_de_usuario/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
     const id = req.params.id
 
     grupos_de_usuarios.findOne(
@@ -780,27 +1228,60 @@ app.get('/alterar_grupo_de_usuario/:id',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.post('/update_grupos_de_usuarios',verificarAutenticacao,(req,res)=>{
+app.post('/update_grupos_de_usuarios',verificarAutenticacao,verificarPermAlterar,async(req,res)=>{
     const id = req.body.id
-    const grupo = req.body.gruposusuario
-    const alterar = req.body.alterar || 0
-    const inserir = req.body.inserir || 0
-    const deletar = req.body.deletar || 0
+    const grupo = req.body.gruposusuario.toLowerCase()
+    const alterar = req.body.alterar
+    const inserir = req.body.inserir
+    const deletar = req.body.deletar
 
-    grupos_de_usuarios.update(
-        {grupo: grupo, inserir: inserir, alterar: alterar, deletar: deletar},
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'alterado',
-            tabela: 'grupos_de_usuarios',
-            id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_grupos_de_usuarios')
-        })
+    const grupoEncontrado = await grupos_de_usuarios.findOne({
+        where:{
+            grupo: grupo,
+            ativo: 1
+        }
     })
-    
+
+    if (grupo.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um grupo de usúarios válido.'
+        })
+    }
+
+    if(grupoEncontrado.id != id){
+        if(grupoEncontrado){
+            return res.status(400).json({
+                success:false,
+                message: 'Esse grupo de usúarios já esta cadastrado.'
+            })
+        }
+    }
+
+
+    try {
+        grupos_de_usuarios.update(
+            {grupo: grupo, inserir: inserir, alterar: alterar, deletar: deletar},
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'grupos_de_usuarios',
+                id_registro: id
+            })
+                return res.json({
+                    success: true,
+                    message: 'Grupo de usúarios alterado!'
+                })
+    }
+    catch(error){
+        return res.json({
+            success: false,
+            message: 'Erro ao alterar grupo de usúarios',
+            error: error
+        })
+    }
 })
 
 
@@ -836,29 +1317,63 @@ app.get('/listar_concorrentes',verificarAutenticacao,(req,res)=>{
     
 })
 
-app.get('/inserir_concorrentes',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_concorrentes',verificarAutenticacao,verificarPermInserir,(req,res)=>{
     res.render('inserir_concorrentes')
 })
 
-app.post('/salvar_concorrentes',verificarAutenticacao,(req,res)=>{
+app.post('/salvar_concorrentes',verificarAutenticacao, verificarPermInserir,async (req,res)=>{
     var nome = req.body.concorrente.toLowerCase()
 
-    concorrentes.create({
-        nome: nome.toLowerCase(),
-        ativo: 1
-    }).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'concorrentes',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_concorrentes')
-        })
+    const concorrenteEncontrado = await concorrentes.findOne({
+        where: {
+            nome: nome,
+            ativo: 1
+        }
     })
+
+    if(nome.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um concorrente válido.'
+        })
+    }
+
+    if(concorrenteEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Concorrente já cadastrado.'
+        })
+    }
+
+    try {
+
+      await  
+            concorrentes.create({
+            nome: nome.toLowerCase(),
+            ativo: 1
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'concorrentes',
+                id_registro: 0
+            })
+                return res.status(200).json({
+                    success: true,
+                    message: 'Concorrente cadastrado!'
+                })
+                
+    } 
+    catch(error){
+        res.status(500).json({
+            success: false,
+            message: 'Ocorreu um erro',
+            error: error.message
+        })
+    }
 })
 
-app.post('/deletar_concorrente',verificarAutenticacao,(req,res)=>{
+app.post('/deletar_concorrente',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
     var id = req.body.id;
 
     concorrentes.update(
@@ -876,7 +1391,7 @@ app.post('/deletar_concorrente',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.get('/alterar_concorrentes/:id',verificarAutenticacao,(req,res)=>{
+app.get('/alterar_concorrentes/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
     const id = req.params.id
 
     concorrentes.findOne(
@@ -889,23 +1404,56 @@ app.get('/alterar_concorrentes/:id',verificarAutenticacao,(req,res)=>{
     
 })
 
-app.post('/update_concorrentes',verificarAutenticacao,(req,res)=>{
+app.post('/update_concorrentes',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
     const id = req.body.id
-    const nome = req.body.concorrente
+    const nome = req.body.concorrente.trim()
 
-    concorrentes.update(
-        {nome: nome},
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'alterado',
-            tabela: 'concorrentes',
-            id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_concorrentes')
-        })
+    const concorrenteEncontrado = await concorrentes.findOne({
+        where: {
+            nome: nome,
+            ativo: 1
+        }
     })
+
+    if(nome.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um concorrente válido.'
+        })
+    }
+
+    if(concorrenteEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Concorrente já cadastrado.'
+        })
+    }
+
+    try {
+        
+        await concorrentes.update(
+            {nome: nome},
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'concorrentes',
+                id_registro: id
+            })
+                return res.status(200).json({
+                    success: true,
+                    message: 'Concorrente alterado!'
+                })
+
+    } 
+    catch {
+        return res.status(500).json({
+            success: false,
+            message: 'Ocorreu um erro ao alterar o módulo.',
+        });
+    }
+
 })
 
 
@@ -941,29 +1489,59 @@ app.get('/listar_modulos',verificarAutenticacao,(req,res)=>{
     
 })
 
-app.get('/inserir_modulos',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_modulos',verificarAutenticacao,verificarPermInserir,(req,res)=>{
     res.render('inserir_modulos')
 })
 
-app.post('/salvar_modulos',verificarAutenticacao,(req,res)=>{
-    var modulo = req.body.modulo.toLowerCase()
+app.post('/salvar_modulos',verificarAutenticacao,verificarPermInserir,async(req,res)=>{
+    try{
+        const modulo = req.body.modulo.toLowerCase().trim()
 
-    modulos.create({
-        modulo: modulo,
-        ativo: 1
-    }).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'modulos',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_modulos')
+        const moduloEncontrado = await modulos.findOne({    
+            where: {
+                modulo: modulo,
+                ativo: 1
+              }
         })
-    })
+
+        if(modulo.length < 3){
+            return res.status(400).json({
+                success: false,
+                message: 'Digite um módulo válido.'
+            })
+        }
+
+        if(moduloEncontrado){
+            return res.status(400).json({
+                success: false,
+                message: 'Módulo Já cadastrado.'
+            })
+        }
+    
+        await modulos.create({
+            modulo: modulo,
+            ativo: 1
+        }).then(()=>{
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'modulos',
+                id_registro: 0
+            }).then(()=>{
+                return res.json({
+                    success: true,
+                    message: 'Módulo cadastrado!'
+                })
+            })
+        })
+    } catch (error) {
+        console.error("Erro ao salvar módulo:", error);
+        res.redirect('/listar_modulos')
+    }
+
 })
 
-app.post('/deletar_modulos',verificarAutenticacao,(req,res)=>{
+app.post('/deletar_modulos',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
     var id = req.body.id
 
     modulos.update(
@@ -981,7 +1559,7 @@ app.post('/deletar_modulos',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.get('/alterar_modulos/:id',verificarAutenticacao,(req,res)=>{
+app.get('/alterar_modulos/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
     var id = req.params.id
 
     modulos.findOne(
@@ -993,23 +1571,56 @@ app.get('/alterar_modulos/:id',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.post('/update_modulos',verificarAutenticacao,(req,res)=> {
+app.post('/update_modulos',verificarAutenticacao, verificarPermAlterar,async(req,res)=> {
     const id = req.body.id
-    const modulo = req.body.modulo
+    const modulo = req.body.modulo.trim()
 
-    modulos.update(
-        {modulo: modulo},
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
+    const moduloEncontrado = await modulos.findOne({
+        where: {
+            modulo: modulo,
+            ativo: 1
+        }
+    })
+
+    if(modulo.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um módulo válido.'
+        })
+    }
+
+    if (moduloEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Este módulo já esta cadastrado.'
+        })
+    }
+    try {
+        await modulos.update(
+            { modulo: modulo },
+            { where: { id: id } }
+        );
+
+        // Log da alteração
+        await log.create({
             usuario: res.locals.usuarioid,
             acao: 'alterado',
             tabela: 'modulos',
             id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_modulos')
-        })
-    })
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Módulo alterado com sucesso!'
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: 'Ocorreu um erro ao alterar o módulo.',
+            error: error.message
+        });
+    }
 })
 
 
@@ -1046,29 +1657,61 @@ app.get('/listar_tipos_entidade',verificarAutenticacao,(req,res)=>{
     
 })
 
-app.get('/inserir_tipos_entidade',verificarAutenticacao,(req,res)=>{
+app.get('/inserir_tipos_entidade',verificarAutenticacao,verificarPermInserir,(req,res)=>{
     res.render('inserir_tipos_entidade')
 })
 
-app.post('/salvar_tipos_entidade',verificarAutenticacao,(req,res)=>{
-    var tipo_entidade = req.body.tipo_entidade.toLowerCase()
+app.post('/salvar_tipos_entidade',verificarAutenticacao,verificarPermInserir,async(req,res)=>{
+    const tipo_entidade = req.body.tipo_entidade.toLowerCase()
 
-    tipos_entidade.create({
-        tipo_entidade: tipo_entidade,
-        ativo: 1
-    }).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'inserido',
-            tabela: 'tipos_entidades',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/listar_tipos_entidade')
-        })
+    const tipoEncontrado = await tipos_entidade.findOne({
+        where: {
+            tipo_entidade: tipo_entidade,
+            ativo: 1
+        }
     })
+
+    if(tipo_entidade.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um tipo de entidade válido.'
+        })
+    }
+
+    if(tipoEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse tipo de entidade já esta cadastrado.'
+        })
+    }
+
+    try {
+        await tipos_entidade.create({
+            tipo_entidade: tipo_entidade,
+            ativo: 1
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'tipos_entidades',
+                id_registro: 0
+            })  
+                return res.json({
+                    success: true,
+                    message: 'Tipo de entidade cadastrado!'
+                })
+
+    }
+    catch(error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar tipo.',
+            error: error
+        })
+    }
 })
 
-app.post('/deletar_tipo_entidade',verificarAutenticacao,(req,res)=>{
+app.post('/deletar_tipo_entidade',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
     var id = req.body.id
 
     tipos_entidade.update(
@@ -1086,7 +1729,7 @@ app.post('/deletar_tipo_entidade',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.get('/alterar_tipos_de_enteidade/:id',verificarAutenticacao,(req,res)=>{
+app.get('/alterar_tipos_de_enteidade/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
     const id = req.params.id
 
     tipos_entidade.findOne(
@@ -1098,23 +1741,55 @@ app.get('/alterar_tipos_de_enteidade/:id',verificarAutenticacao,(req,res)=>{
     })
 })
 
-app.post('/update_tipo_entidade',verificarAutenticacao,(req,res)=>{
+app.post('/update_tipo_entidade',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
     const id = req.body.id
-    const nome = req.body.tipo_entidade
+    const tipo_entidade = req.body.tipo_entidade.toLowerCase()
 
-    tipos_entidade.update(
-        {tipo_entidade: nome},
-        {where: {id:id}}
-    ).then(()=>{
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'alterado',
-            tabela: 'tipos_entidades',
-            id_registro: id
-        }).then(()=>{
-            res.redirect('/listar_tipos_entidade')
-        })
+    const tipoEncontrado = await tipos_entidade.findOne({
+        where: {
+            tipo_entidade: tipo_entidade, 
+            ativo: 1
+        }
     })
+
+    if(tipo_entidade.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um tipo de entidade válido.'
+        })
+    }
+
+    if(tipoEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse tipo de entidade já esta cadastrado.'
+        })
+    }
+
+    try {
+        await tipos_entidade.update(
+            {tipo_entidade: tipo_entidade},
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'tipos_entidades',
+                id_registro: id
+            })  
+                return res.json({
+                    success: true,
+                    message: 'Tipo de entidade alterado!'
+                })
+    }
+    catch(error){
+        return res.json({
+            success: false,
+            message: 'Erro ao alterar tipo de entidade.',
+            error: error
+        })
+    }
+
 })
 
 //CRIANDO O SERVIDOR

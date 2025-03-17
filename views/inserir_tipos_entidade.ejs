@@ -5,7 +5,7 @@
     <div class="wrapper">
 
         <div class="container">
-
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
             <form action="/salvar_tipos_entidade" class="form-control" method="post">
                 
                 <div class="card">
@@ -23,7 +23,7 @@
                     </div>
     
                     <div class="card-footer">
-                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <div onclick="cadastrarTipodeEntidade()" class="btn btn-success">Salvar</div>
                         <a href="/listar_tipos_entidade"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
                     

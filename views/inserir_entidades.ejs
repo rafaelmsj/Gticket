@@ -5,7 +5,7 @@
     <div class="wrapper">
 
         <div class="container">
-
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
             <form action="/salvar_entidades" class="form-control" method="post">
                 
                 <div class="card">
@@ -30,17 +30,19 @@
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
     
-                        <label for="estado" ><strong>Estado:</strong></label>
+                        <label for="estado"><strong>Estado:</strong></label>
                         <select name="estado" id="estado" class="form-control form-control-lg inputs">
                             <option value="">Selecione um estado</option>
                         </select>
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                    
+                        
                         <label for="cidade"><strong>Cidade:</strong></label>
                         <select name="cidade" id="cidade" disabled class="form-control form-control-lg inputs">
-                            <option value="">Selecione um estado primeiro</option>
+                            <option value="">Selecione uma cidade</option>
                         </select>
+                        
+                        
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                         
@@ -124,7 +126,7 @@
                     </div>
     
                     <div class="card-footer">
-                        <div onclick="conferenull()" class="btn btn-success">Salvar</div>
+                        <div onclick="cadastrarEntidade()" class="btn btn-success">Salvar</div>
                         <a href="/listar_entidades"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
                     

@@ -8,26 +8,9 @@
 
         <div class="container">
 
-       
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: false;"></div>
             <div class="container">
                 <div class="row justify-content-center">
-                    <!-- Entidades -->
-                    <div class="col-md-4 mb-4">
-                        <div class="card shadow">
-                            <div class="card-header text-center">
-                                <i class="fas fa-cogs"></i> <strong>Entidades</strong>
-                            </div>
-                            <div class="card-body">
-                                <a href="/listar_entidades" class="card-item btn btn-outline-dark w-100 mb-2">
-                                    <i class="fas fa-list"></i> Listar entidades
-                                </a>
-                                <a href="/listar_tipos_entidade" class="card-item btn btn-outline-dark w-100">
-                                    <i class="fas fa-tags"></i> Tipos de entidade
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-            
                     <!-- Tickets -->
                     <div class="col-md-4 mb-4">
                         <div class="card shadow">
@@ -38,12 +21,37 @@
                                 <a href="#" class="card-item btn btn-outline-dark w-100 mb-2">
                                     <i class="fas fa-list-alt"></i> Listar Tickets
                                 </a>
-                                <a href="#" class="card-item btn btn-outline-dark w-100">
+                                <a href="#" class="card-item btn btn-outline-dark w-100 mb-2">
                                     <i class="fas fa-cogs"></i> Tipos de Tickets
+                                </a>
+                                <a href="#" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-exclamation-circle"></i> Prioridades
                                 </a>
                             </div>
                         </div>
                     </div>
+            
+                    <!-- Usuários -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-user"></i> <strong>Usuários</strong>
+                            </div>
+                            <div class="card-body">
+                                <div onclick="acessaPGUsuario()" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-users"></i> Usuários
+                                </div>
+                                <div id="menugrupos" onclick="acessaPGgrupoUsuario()" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-user-tag"></i> Grupos de Usuário
+                                </div>
+                                <a href="/configurar_usuario" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-user"></i> Configurações do Usuário
+                                </a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    
                 </div>
             
                 <div class="row justify-content-center">
@@ -70,22 +78,23 @@
                         </div>
                     </div>
             
-                    <!-- Usuários -->
+                    <!-- Entidades -->
                     <div class="col-md-4 mb-4">
                         <div class="card shadow">
                             <div class="card-header text-center">
-                                <i class="fas fa-user"></i> <strong>Usuários</strong>
+                                <i class="fas fa-cogs"></i> <strong>Entidades</strong>
                             </div>
                             <div class="card-body">
-                                <a href="/listar_usuarios" class="card-item btn btn-outline-dark w-100 mb-2">
-                                    <i class="fas fa-users"></i> Usuários
+                                <a href="/listar_entidades" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-list"></i> Listar entidades
                                 </a>
-                                <a href="/listar_grupos_de_usuarios" class="card-item btn btn-outline-dark w-100">
-                                    <i class="fas fa-user-tag"></i> Grupos de Usuário
+                                <a href="/listar_tipos_entidade" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-tags"></i> Tipos de entidade
                                 </a>
                             </div>
                         </div>
                     </div>
+                    
                 </div>
             </div>
             
@@ -108,9 +117,23 @@
                             <% logs.forEach((log) => { 
                                 if (count < limit && (log.acao == 'alterado' || log.acao == 'inserido' || log.acao == 'deletado')) { %>
                                     <div>
-                                        O Usuário <strong><%= usuario.nome %></strong> 
+                                        O Usuário <strong> 
+                                            <% 
+                                            var user = ''
+                                            usuarios.forEach((usuario) => { 
+                                                if(usuario.id == log.usuario){
+                                                    user = usuario.nome
+                                                }
+                                                
+                                                })%>
+                                                <%=user%></strong> 
                                         <% if (log.acao == 'alterado') { %>
-                                            alterou o registro na página <%= log.tabela %>.
+                                            alterou o registro na página <%= log.tabela.replace(/_/g, ' ')
+                                            .replace('versao sistemas','versão')
+                                            .replace('tipos entidades', 'tipos de entidades')
+                                            .replace('usuarios','Usúarios')
+                                            .replace('modulos','módulos')
+                                            .replace('setores', 'setor')%>.
                                             <br>
                                             <div class="text-muted">
                                                 <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
@@ -122,7 +145,12 @@
                                                 }).replace(',', ' às') %>
                                             </div>
                                         <% } else if (log.acao == 'inserido') { %>
-                                            inseriu um registro na página <%= log.tabela %>.
+                                            inseriu um registro na página <%= log.tabela.replace(/_/g, ' ')
+                                            .replace('versao sistemas','versão')
+                                            .replace('tipos entidades', 'tipos de entidades')
+                                            .replace('usuarios','Usúarios')
+                                            .replace('modulos','módulos')
+                                            .replace('setores', 'setor')%>.
                                             <br>
                                             <div class="text-muted">
                                                 <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
@@ -134,7 +162,12 @@
                                                 }).replace(',', ' às') %>
                                             </div>
                                         <% } else if (log.acao == 'deletado') { %>
-                                            deletou um registro na página <%= log.tabela %>.
+                                            deletou um registro na página <%= log.tabela.replace(/_/g, ' ')
+                                            .replace('versao sistemas','versão')
+                                            .replace('tipos entidades', 'tipos de entidades')
+                                            .replace('usuarios','Usúarios')
+                                            .replace('modulos','módulos')
+                                            .replace('setores', 'setor')%>.
                                             <br>
                                             <div class="text-muted">
                                                 <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
@@ -165,7 +198,15 @@
                             <% logs.forEach((log) => { 
                                 if (count1 < limit && (log.acao == 'login' || log.acao == 'logout')) { %>
                                     <div>
-                                        O Usuário <strong><%= usuario.nome %></strong> <%= log.acao == 'login' ? 'acessou o' : 'saiu do' %> sistema.
+                                        O Usuário <strong><% 
+                                            var user = ''
+                                            usuarios.forEach((usuario) => { 
+                                                if(usuario.id == log.usuario){
+                                                    user = usuario.nome
+                                                }
+                                                
+                                                })%>
+                                                <%=user%></strong> <%= log.acao == 'login' ? 'acessou o' : 'saiu do' %> sistema.
                                         <br>
                                         <div class="text-muted">
                                             <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
