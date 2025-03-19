@@ -16,6 +16,8 @@ const modulos = require('./database/modulos')
 const log = require('./database/log');
 const tipos_entidade = require('./database/tipos_entidade');
 const { where } = require('sequelize');
+const { Op } = require('sequelize');  // Importa o operador Op do Sequelize
+
 
 app.set('view engine','ejs') //importando EJS
 app.use(express.static('public')) //Permitindo arquivos estaticos
@@ -124,7 +126,7 @@ app.get('/admin', verificarAutenticacao, (req, res) => {
 
 //ROTAS E FUNCOES DE LOGIN E LOGOUT
 app.get('/login', (req, res) => {
-    res.render('login', { erro: null });
+    res.render('login');
 });
 
 app.post('/login', async (req, res) => {
@@ -136,7 +138,7 @@ app.post('/login', async (req, res) => {
         if (usuarioEncontrado.ativo !== 1) {
             return res.json( {
                 success: false,
-                message: 'Usuário inativo'
+                message: '*Usuário inativo.'
             });
         }
 
@@ -144,7 +146,7 @@ app.post('/login', async (req, res) => {
         if (!senhaValida) {
             return res.json( {
                 success: false,
-                message: '*Senha inválida'
+                message: '*Senha inválida.'
             });
         }
 
@@ -177,16 +179,20 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    req.session.destroy(() => {
-        log.create({
-            usuario: res.locals.usuarioid,
-            acao: 'logout',
-            tabela: '',
-            id_registro: 0
-        }).then(()=>{
-            res.redirect('/');
-        })
-    });
+    if (req.session.usuarioId){
+        req.session.destroy(() => {
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'logout',
+                tabela: '',
+                id_registro: 0
+            }).then(()=>{
+                res.redirect('/');
+            })
+        });
+    } else {
+        res.redirect('/')
+    }
 });
 
 function verificarAutenticacao(req, res, next) {
@@ -230,45 +236,85 @@ async function verificarPermDeletar(req, res, next) {
 }
 
 // ROTAS DAS ENTIDADES
-app.get('/listar_entidades',verificarAutenticacao, (req, res) => {
-    const page = parseInt(req.query.page) || 1; // Página atual (default: 1)
-    const limit = 20;                          // Registros por página
-    const offset = (page - 1) * limit;         // Calcula o deslocamento
-    const idUsuario = req.session.usuarioId
-    const idGrupo = req.session.grupo
+app.get('/listar_entidades', verificarAutenticacao, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1; // Página atual (default: 1)
+        const limit = 20;                           // Registros por página
+        const offset = (page - 1) * limit;          // Calcula o deslocamento
+        const idUsuario = req.session.usuarioId;
+        const idGrupo = req.session.grupo;
 
-    entidades.findAndCountAll({
-        where: { ativo: 1 },
-        order: [['estado', 'ASC'], ['cidade', 'ASC']],
-        limit: limit,
-        offset: offset
-    }).then(result => {
+        // Captura os filtros da requisição
+        const { search, instalado, ordenar } = req.query;
+
+        // Filtros dinâmicos
+        const whereCondition = { ativo: 1 };
+        if (search) whereCondition.cidade = { [Op.like]: `%${search}%` };
+        
+        // Ordenação
+        let orderCondition = [];
+        switch (ordenar) {
+            case 'mais_recente':
+                orderCondition = [['id', 'DESC']];
+                break;
+            case 'menos_recente':
+                orderCondition = [['id', 'ASC']];
+                break;
+            case 'a_z':
+                orderCondition = [['cidade', 'ASC'], ['estado', 'ASC']];
+                break;
+            case 'z_a':
+                orderCondition = [['cidade', 'DESC'], ['estado', 'DESC']];
+                break;
+            default:
+                orderCondition = [['cidade', 'ASC'], ['estado', 'ASC']];
+                break;
+        }
+
+        if (instalado !== undefined) {
+            if (instalado === '') {
+                delete whereCondition.instalado; // Remove o filtro se "Todos" for selecionado
+            } else {
+                whereCondition.instalado = instalado === '1' ? 1 : 0; // "Sim" => 1, "Não" => 0
+            }
+        }
+
+        // Busca entidades com paginação e filtro
+        const result = await entidades.findAndCountAll({
+            where: whereCondition,
+            order: orderCondition,
+            limit: limit,
+            offset: offset
+        });
+
         const totalEntidades = result.count;
         const totalPages = Math.ceil(totalEntidades / limit);
 
-        tipos_entidade.findAll().then(tipos => {
-            versao_sistema.findAll().then(versoes => {
-                usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
-                    grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
-                        res.render('listar_entidades', {
-                            entidades: result.rows,
-                            tipos: tipos,
-                            versoes: versoes,
-                            currentPage: page,
-                            totalPages: totalPages,
-                            infoUser: usuarioinfo,
-                            infoGrupo: grupoinfo
-                        });
-                    })
+        // Busca os dados auxiliares
+        const [tipos, versoes, usuarioinfo, grupoinfo] = await Promise.all([
+            tipos_entidade.findAll(),
+            versao_sistema.findAll(),
+            usuarios.findOne({ where: { id: idUsuario } }),
+            grupos_de_usuarios.findOne({ where: { id: idGrupo } })
+        ]);
 
-                })
-                
-            });
+        res.render('listar_entidades', {
+            entidades: result.rows,
+            tipos: tipos,
+            versoes: versoes,
+            currentPage: page,
+            totalPages: totalPages,
+            infoUser: usuarioinfo,
+            infoGrupo: grupoinfo,
+            filtros: { search, instalado, ordenar },
+            ordenar: ordenar,
+            instalado: instalado
         });
-    }).catch(err => {
+
+    } catch (err) {
         console.error('Erro ao buscar entidades:', err);
         res.status(500).send('Erro interno no servidor');
-    });
+    }
 });
 
 app.get('/inserir_entidades',verificarAutenticacao, verificarPermInserir,(req,res)=>{
@@ -292,6 +338,8 @@ app.get('/inserir_entidades',verificarAutenticacao, verificarPermInserir,(req,re
 app.post('/salvar_entidades',verificarAutenticacao,verificarPermInserir, async(req,res)=>{
     var cidade = req.body.cidade.toLowerCase()
     var estado = req.body.estado.toLowerCase()
+    var instalado = req.body.instalado
+    var observacao = req.body.observacao.trim()
     var tipo_entidade = req.body.tipo_entidade
     var modulos_contratados = req.body.modulos_contratados
     var versao_sistema = req.body.versao_sistema
@@ -324,6 +372,8 @@ app.post('/salvar_entidades',verificarAutenticacao,verificarPermInserir, async(r
             tipo_entidade: tipo_entidade,
             modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
             versao_sistema: versao_sistema,
+            instalado: instalado,
+            observacao: observacao,
             ativo: ativo
         })
             log.create({
@@ -395,6 +445,8 @@ app.post('/update_entidade',verificarAutenticacao,verificarPermAlterar, async(re
     const versao = req.body.versao_sistema
     const website_concorrente = req.body.website_concorrente
     const sistema_concorrente = req.body.sistema_concorrente
+    const instalado = req.body.instalado
+    const observacao = req.body.observacao.trim()
 
     
     try {
@@ -403,7 +455,9 @@ app.post('/update_entidade',verificarAutenticacao,verificarPermAlterar, async(re
                 modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
                 versao_sistema: versao,
                 website_concorrente: website_concorrente,
-                sistema_concorrente: sistema_concorrente
+                sistema_concorrente: sistema_concorrente,
+                instalado: instalado,
+                observacao: observacao
             },
             {where: {id:id}}
         )
@@ -437,9 +491,37 @@ app.get('/listar_versaosis',verificarAutenticacao, (req,res)=>{
     const idUsuario = req.session.usuarioId
     const idGrupo = req.session.grupo
 
+    // Captura os filtros da requisição
+    const { search,  ordenar } = req.query;
+
+    // Filtros dinâmicos
+    const whereCondition = { ativo: 1 };
+    if (search) whereCondition.versao = { [Op.like]: `%${search}%` };
+
+    // Ordenação
+    let orderCondition = [];
+    switch (ordenar) {
+        case 'mais_recente':
+            orderCondition = [['id', 'DESC']];
+            break;
+        case 'menos_recente':
+            orderCondition = [['id', 'ASC']];
+            break;
+        case 'a_z':
+            orderCondition = [['versao', 'ASC']];
+            break;
+        case 'z_a':
+            orderCondition = [['versao', 'DESC']];
+            break;
+        default:
+            orderCondition = [['versao', 'ASC']];
+            break;
+    }
+
+
     versao_sistema.findAndCountAll({
-        where: { ativo: 1 },
-        order: [['versao', 'ASC']],
+        where: whereCondition,
+        order: orderCondition,
         limit: limit,
         offset: offset
     }).then(versoes => {
@@ -451,7 +533,8 @@ app.get('/listar_versaosis',verificarAutenticacao, (req,res)=>{
                     currentPage: page,
                     totalPages: totalPages,
                     infoUser: usuarioinfo,
-                    infoGrupo: grupoinfo
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
                 })
             })
         })    
@@ -546,12 +629,15 @@ app.get('/alterar_versao/:id',verificarAutenticacao,verificarPermAlterar, (req,r
 
 app.post('/update_versao',verificarAutenticacao,verificarPermAlterar, async(req,res)=>{
     const id = req.body.id
-    const versao = req.body.versaosis.trim()
+    const versao = req.body.versaosis.toLowerCase().trim()
 
     const versaoEncontrada = await versao_sistema.findOne({
         where: {
             versao: versao,
-            ativo: 1
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
         }
     })
 
@@ -607,9 +693,37 @@ app.get('/listar_setor',verificarAutenticacao,(req,res)=>{
     const idUsuario = req.session.usuarioId
     const idGrupo = req.session.grupo
 
+
+    // Captura os filtros da requisição
+    const { search,  ordenar } = req.query;
+
+    // Filtros dinâmicos
+    const whereCondition = { ativo: 1 };
+    if (search) whereCondition.setor = { [Op.like]: `%${search}%` };
+
+    // Ordenação
+    let orderCondition = [];
+    switch (ordenar) {
+        case 'mais_recente':
+            orderCondition = [['id', 'DESC']];
+            break;
+        case 'menos_recente':
+            orderCondition = [['id', 'ASC']];
+            break;
+        case 'a_z':
+            orderCondition = [['setor', 'ASC']];
+            break;
+        case 'z_a':
+            orderCondition = [['setor', 'DESC']];
+            break;
+        default:
+            orderCondition = [['setor', 'ASC']];
+            break;
+    }
+
     setores.findAndCountAll({
-        where: {ativo: 1},
-        order: [['setor', 'ASC']],
+        where: whereCondition,
+        order: orderCondition,
         limit: limit,
         offset: offset
     }).then(setores=>{
@@ -621,7 +735,8 @@ app.get('/listar_setor',verificarAutenticacao,(req,res)=>{
                     currentPage: page,
                     totalPages: totalPages,
                     infoUser: usuarioinfo,
-                    infoGrupo: grupoinfo
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
                 })
             })
          })    
@@ -635,8 +750,8 @@ app.get('/inserir_setor',verificarAutenticacao,verificarPermInserir,(req,res)=>{
 })
 
 app.post('/salvarsetor',verificarAutenticacao,verificarPermInserir, async(req,res)=>{
-    var setor = req.body.setor.toLowerCase()
-    var sigla = req.body.sigla.toLowerCase()
+    var setor = req.body.setor.toLowerCase().trim()
+    var sigla = req.body.sigla.toLowerCase().trim()
     var ativo = 1
 
     const setorEncontrado = await setores.findOne({
@@ -740,18 +855,20 @@ app.get('/alterar_setor/:id',verificarAutenticacao,verificarPermAlterar, (req,re
 })
 
 app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
-    const setor = req.body.setor.toLowerCase()
-    const sigla = req.body.sigla.toLowerCase()
+    const setor = req.body.setor.toLowerCase().trim()
+    const sigla = req.body.sigla.toLowerCase().trim()
     const id = req.body.id
 
     const setorEncontrado = await setores.findOne({
         where: {
             setor: setor,
-            sigla: sigla,
-            ativo: 1
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
         }
     })
-
+    
     if(setor.length < 3){
         return res.status(400).json({
             success: false,
@@ -765,7 +882,30 @@ app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,r
             message: 'Setor já cadastrado.'
         })
     }
+    
+    const siglaEncontrado = await setores.findOne({
+        where: {
+            sigla: sigla,
+            ativo: 1,
+            id: {
+                [Op.ne]: id  // Não trazer o registro com id igual a 5
+            }
+        }
+    })
 
+    if(sigla.trim().length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite uma sigla válida.'
+        })
+    }
+
+    if (siglaEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Essa sigla já está em uso.'
+        })
+    }
 
     try {
         await setores.update(
@@ -802,6 +942,33 @@ app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,r
         const idUsuario = req.session.usuarioId
         const idGrupo = req.session.grupo
         
+    // Captura os filtros da requisição
+    const { search,  ordenar } = req.query;
+
+    // Filtros dinâmicos
+    const whereCondition = { ativo: 1 };
+    if (search) whereCondition.nome = { [Op.like]: `%${search}%` };
+
+    // Ordenação
+    let orderCondition = [];
+    switch (ordenar) {
+        case 'mais_recente':
+            orderCondition = [['id', 'DESC']];
+            break;
+        case 'menos_recente':
+            orderCondition = [['id', 'ASC']];
+            break;
+        case 'a_z':
+            orderCondition = [['nome', 'ASC']];
+            break;
+        case 'z_a':
+            orderCondition = [['nome', 'DESC']];
+            break;
+        default:
+            orderCondition = [['nome', 'ASC']];
+            break;
+    }
+
 
         if(req.session.perm_usuarios !== 1){
             return res.status(400).json({
@@ -811,8 +978,8 @@ app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,r
         }
 
         usuarios.findAndCountAll({
-            where: {ativo: 1},
-            order: [['nome','ASC']],
+            where: whereCondition,
+            order: orderCondition,
             limit: limit,
             offset: offset
         }).then(usuariosGeral=>{
@@ -828,7 +995,8 @@ app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,r
                                 infoUser: usuarioinfo,
                                 infoGrupo: grupoinfo,
                                 setores: setores,
-                                grupos: grupos
+                                grupos: grupos,
+                                ordenar: ordenar
                             })    
                         })
                     })
@@ -1049,12 +1217,10 @@ app.post('/alterar_password', async (req, res) => {
         return res.status(400).json({ success: false, message: 'As senhas não coincidem.' });
     }
 
-    if (senhaNew.length == 1) {
-        return res.status(400).json({ success: false, message: 'Campo Obrigatório' });
-    }
+
 
     // Verificar se a nova senha tem pelo menos 6 caracteres
-    if (senhaNew.length > 2 && senhaNew.length < 6) {
+    if (senhaNew.length < 6) {
         return res.status(400).json({ success: false, message: 'A nova senha deve ter pelo menos 6 caracteres.' });
     }
 
@@ -1113,9 +1279,36 @@ app.get('/listar_grupos_de_usuarios',verificarAutenticacao,(req,res)=>{
     }
 
 
+    // Captura os filtros da requisição
+    const { search,  ordenar } = req.query;
+
+    // Filtros dinâmicos
+    const whereCondition = { ativo: 1 };
+    if (search) whereCondition.grupo = { [Op.like]: `%${search}%` };
+
+    // Ordenação
+    let orderCondition = [];
+    switch (ordenar) {
+        case 'mais_recente':
+            orderCondition = [['id', 'DESC']];
+            break;
+        case 'menos_recente':
+            orderCondition = [['id', 'ASC']];
+            break;
+        case 'a_z':
+            orderCondition = [['grupo', 'ASC']];
+            break;
+        case 'z_a':
+            orderCondition = [['grupo', 'DESC']];
+            break;
+        default:
+            orderCondition = [['grupo', 'ASC']];
+            break;
+    }
+
     grupos_de_usuarios.findAndCountAll({
-        where: {ativo : 1},
-        order: [['grupo','ASC']],
+        where: whereCondition,
+        order: orderCondition,
         offset,
         limit
     }).then(grupos_user => {
@@ -1127,7 +1320,8 @@ app.get('/listar_grupos_de_usuarios',verificarAutenticacao,(req,res)=>{
                     totalPages: totalPages,
                     currentPage: page,
                     infoUser: usuarioinfo,
-                    infoGrupo: grupoinfo
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
                 })
             })
         })    
@@ -1142,7 +1336,7 @@ app.get('/inserir_grupos_de_usuarios',verificarAutenticacao,verificarPermInserir
 })
 
 app.post('/salvar_grupos_de_usuarios',verificarAutenticacao,verificarPermInserir, async(req, res)=>{
-    var grupo = req.body.gruposusuario.toLowerCase()
+    var grupo = req.body.gruposusuario.toLowerCase().trim()
     var inserir = req.body.inserir
     var alterar = req.body.alterar
     var deletar = req.body.deletar
@@ -1230,7 +1424,7 @@ app.get('/alterar_grupo_de_usuario/:id',verificarAutenticacao,verificarPermAlter
 
 app.post('/update_grupos_de_usuarios',verificarAutenticacao,verificarPermAlterar,async(req,res)=>{
     const id = req.body.id
-    const grupo = req.body.gruposusuario.toLowerCase()
+    const grupo = req.body.gruposusuario.toLowerCase().trim()
     const alterar = req.body.alterar
     const inserir = req.body.inserir
     const deletar = req.body.deletar
@@ -1238,7 +1432,10 @@ app.post('/update_grupos_de_usuarios',verificarAutenticacao,verificarPermAlterar
     const grupoEncontrado = await grupos_de_usuarios.findOne({
         where:{
             grupo: grupo,
-            ativo: 1
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
         }
     })
 
@@ -1293,10 +1490,36 @@ app.get('/listar_concorrentes',verificarAutenticacao,(req,res)=>{
     const idUsuario = req.session.usuarioId
     const idGrupo = req.session.grupo
 
+    // Captura os filtros da requisição
+    const { search,  ordenar } = req.query;
+
+    // Filtros dinâmicos
+    const whereCondition = { ativo: 1 };
+    if (search) whereCondition.nome = { [Op.like]: `%${search}%` };
+
+    // Ordenação
+    let orderCondition = [];
+    switch (ordenar) {
+        case 'mais_recente':
+            orderCondition = [['id', 'DESC']];
+            break;
+        case 'menos_recente':
+            orderCondition = [['id', 'ASC']];
+            break;
+        case 'a_z':
+            orderCondition = [['nome', 'ASC']];
+            break;
+        case 'z_a':
+            orderCondition = [['nome', 'DESC']];
+            break;
+        default:
+            orderCondition = [['nome', 'ASC']];
+            break;
+    }
 
     concorrentes.findAndCountAll({
-        where: {ativo: 1},
-        order: [['nome','ASC']],
+        where: whereCondition,
+        order: orderCondition,
         limit: limit,
         offset: offset
     }).then(concorrentes=>{
@@ -1308,7 +1531,8 @@ app.get('/listar_concorrentes',verificarAutenticacao,(req,res)=>{
                     currentPage: page,
                     totalPages: totalPages,
                     infoUser: usuarioinfo,
-                    infoGrupo: grupoinfo
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
                 })
             })
          })    
@@ -1322,7 +1546,7 @@ app.get('/inserir_concorrentes',verificarAutenticacao,verificarPermInserir,(req,
 })
 
 app.post('/salvar_concorrentes',verificarAutenticacao, verificarPermInserir,async (req,res)=>{
-    var nome = req.body.concorrente.toLowerCase()
+    var nome = req.body.concorrente.toLowerCase().trim()
 
     const concorrenteEncontrado = await concorrentes.findOne({
         where: {
@@ -1406,12 +1630,15 @@ app.get('/alterar_concorrentes/:id',verificarAutenticacao,verificarPermAlterar,(
 
 app.post('/update_concorrentes',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
     const id = req.body.id
-    const nome = req.body.concorrente.trim()
+    const nome = req.body.concorrente.toLowerCase().trim()
 
     const concorrenteEncontrado = await concorrentes.findOne({
         where: {
             nome: nome,
-            ativo: 1
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
         }
     })
 
@@ -1465,10 +1692,36 @@ app.get('/listar_modulos',verificarAutenticacao,(req,res)=>{
     const idUsuario = req.session.usuarioId
     const idGrupo = req.session.grupo
 
+        // Captura os filtros da requisição
+        const { search,  ordenar } = req.query;
+
+        // Filtros dinâmicos
+        const whereCondition = { ativo: 1 };
+        if (search) whereCondition.modulo = { [Op.like]: `%${search}%` };
+    
+        // Ordenação
+        let orderCondition = [];
+        switch (ordenar) {
+            case 'mais_recente':
+                orderCondition = [['id', 'DESC']];
+                break;
+            case 'menos_recente':
+                orderCondition = [['id', 'ASC']];
+                break;
+            case 'a_z':
+                orderCondition = [['modulo', 'ASC']];
+                break;
+            case 'z_a':
+                orderCondition = [['modulo', 'DESC']];
+                break;
+            default:
+                orderCondition = [['modulo', 'ASC']];
+                break;
+        }
 
     modulos.findAndCountAll({
-        where: {ativo: 1},
-        order: [['modulo','ASC']],
+        where: whereCondition,
+        order: orderCondition,
         limit: limit,
         offset: offset
     }).then(modulos=>{
@@ -1480,7 +1733,8 @@ app.get('/listar_modulos',verificarAutenticacao,(req,res)=>{
                     totalPages: totalPages,
                     currentPage: page,
                     infoUser: usuarioinfo,
-                    infoGrupo: grupoinfo
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
                 })
             })
          })    
@@ -1573,12 +1827,15 @@ app.get('/alterar_modulos/:id',verificarAutenticacao,verificarPermAlterar,(req,r
 
 app.post('/update_modulos',verificarAutenticacao, verificarPermAlterar,async(req,res)=> {
     const id = req.body.id
-    const modulo = req.body.modulo.trim()
+    const modulo = req.body.modulo.toLowerCase().trim()
 
     const moduloEncontrado = await modulos.findOne({
         where: {
             modulo: modulo,
-            ativo: 1
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
         }
     })
 
@@ -1633,10 +1890,36 @@ app.get('/listar_tipos_entidade',verificarAutenticacao,(req,res)=>{
     const idUsuario = req.session.usuarioId
     const idGrupo = req.session.grupo
 
+       // Captura os filtros da requisição
+       const { search,  ordenar } = req.query;
+
+       // Filtros dinâmicos
+       const whereCondition = { ativo: 1 };
+       if (search) whereCondition.tipo_entidade = { [Op.like]: `%${search}%` };
+   
+       // Ordenação
+       let orderCondition = [];
+       switch (ordenar) {
+           case 'mais_recente':
+               orderCondition = [['id', 'DESC']];
+               break;
+           case 'menos_recente':
+               orderCondition = [['id', 'ASC']];
+               break;
+           case 'a_z':
+               orderCondition = [['tipo_entidade', 'ASC']];
+               break;
+           case 'z_a':
+               orderCondition = [['tipo_entidade', 'DESC']];
+               break;
+           default:
+               orderCondition = [['tipo_entidade', 'ASC']];
+               break;
+       }
 
     tipos_entidade.findAndCountAll({
-        where: {ativo: 1},
-        order: [['tipo_entidade','ASC']],
+        where: whereCondition,
+        order: orderCondition,
         limit: limit,
         offset: offset
     }).then(tipos => {
@@ -1648,7 +1931,8 @@ app.get('/listar_tipos_entidade',verificarAutenticacao,(req,res)=>{
                     totalPages: totalPages,
                     currentPage: page,
                     infoUser: usuarioinfo,
-                    infoGrupo: grupoinfo
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
                 })
             })
          })    
@@ -1662,7 +1946,7 @@ app.get('/inserir_tipos_entidade',verificarAutenticacao,verificarPermInserir,(re
 })
 
 app.post('/salvar_tipos_entidade',verificarAutenticacao,verificarPermInserir,async(req,res)=>{
-    const tipo_entidade = req.body.tipo_entidade.toLowerCase()
+    const tipo_entidade = req.body.tipo_entidade.toLowerCase().trim()
 
     const tipoEncontrado = await tipos_entidade.findOne({
         where: {
@@ -1743,12 +2027,15 @@ app.get('/alterar_tipos_de_enteidade/:id',verificarAutenticacao,verificarPermAlt
 
 app.post('/update_tipo_entidade',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
     const id = req.body.id
-    const tipo_entidade = req.body.tipo_entidade.toLowerCase()
+    const tipo_entidade = req.body.tipo_entidade.toLowerCase().trim()
 
     const tipoEncontrado = await tipos_entidade.findOne({
         where: {
             tipo_entidade: tipo_entidade, 
-            ativo: 1
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
         }
     })
 

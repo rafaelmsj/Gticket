@@ -1,6 +1,5 @@
 const sequelize = require('sequelize');
 const connection = require('./db');
-const tipos_entidade = require('./tipos_entidade');
 
 const entidades = connection.define('entidades', {
     cidade:{
@@ -12,11 +11,11 @@ const entidades = connection.define('entidades', {
         allowNull: false
     },
     website_concorrente: {
-        type: sequelize.STRING,
+        type: sequelize.INTEGER,
         allowNull: false
     },
     sistema_concorrente: {
-        type: sequelize.STRING,
+        type: sequelize.INTEGER,
         allowNull: false
     },
     modulos_contratados:{
@@ -29,6 +28,14 @@ const entidades = connection.define('entidades', {
     },
     tipo_entidade: {
         type: sequelize.INTEGER,
+        allowNull: false
+    },
+    instalado: {
+        type: sequelize.INTEGER,
+        allowNull: false
+    },
+    observacao: {
+        type: sequelize.TEXT,
         allowNull: false
     },
     ativo: {

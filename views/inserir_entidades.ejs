@@ -6,7 +6,7 @@
 
         <div class="container">
             <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
-            <form action="/salvar_entidades" class="form-control" method="post">
+            <form action="/salvar_entidades" class="form-control" method="post" onsubmit="cadastrarEntidade(); return false;">
                 
                 <div class="card">
                 
@@ -15,76 +15,84 @@
                     </div>
     
                     <div class="card-body">
-                        
-                        <label for="tipo_entidade" ><strong>Tipo de entidade:</strong></label>
-                        <select name="tipo_entidade" class="form-control form-control-lg inputs">
-                            <option value="">Selecione o tipo</option>
-                            <% tipos_entidade.forEach((tipo_entidade) => { %>
-    
-                                <% if(tipo_entidade.ativo == 1){ %>
-                                    <option value="<%= tipo_entidade.id %>"><%= tipo_entidade.tipo_entidade %></option>
-                                <%}%>
-                                
-                            <%})%>
-                        </select>
+                        <div class="form-check form-switch ml-4">
+                            <input class="form-check-input" type="checkbox" id="instalado" name="instalado" value="1">
+                            <label class="form-check-label" for="instalado"><strong>Instalado</strong></label>
+                        </div>
                         <br>
-                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-    
-                        <label for="estado"><strong>Estado:</strong></label>
+                        <!--ESTADO-->
+                        <label for="estado"><strong>Estado</strong></label>
                         <select name="estado" id="estado" class="form-control form-control-lg inputs">
                             <option value="">Selecione um estado</option>
                         </select>
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                        
-                        <label for="cidade"><strong>Cidade:</strong></label>
+                        <!--CIDADE-->
+                        <label for="cidade"><strong>Cidade</strong></label>
                         <select name="cidade" id="cidade" disabled class="form-control form-control-lg inputs">
                             <option value="">Selecione uma cidade</option>
                         </select>
-                        
-                        
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                         
-                        <div class="container mt-4">
-                            <div class="row g-3 align-items-end"> 
-                                <div class="col-md-6">
+                        <div class="row align-items-end"> 
+                            <!--TIPO DE ENTIDADE-->
+                            <div class="col">
+                                <label for="tipo_entidade" ><strong>Tipo de entidade</strong></label>
+                                <select name="tipo_entidade" class="form-control form-control-lg inputs">
+                                    <option value="">Selecione o tipo</option>
+                                    <% tipos_entidade.forEach((tipo_entidade) => { %>
+            
+                                        <% if(tipo_entidade.ativo == 1){ %>
+                                            <option value="<%= tipo_entidade.id %>"><%= tipo_entidade.tipo_entidade %></option>
+                                        <%}%>
+                                        
+                                    <%})%>
+                                </select>
+                                <br>
+                                <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                            </div>
+                            <!--VERSAO DO SISTEMA-->
+                            <div class="col">
+                                <label for="versao_sistema" class="form-label"><strong>Versão do Sistema</strong></label>
+                                <select name="versao_sistema" class="form-control form-control-lg inputs">
+                                    <option value="">Selecione</option>
+                                    <% versao_sistema.forEach((versao) => { %>
+                                        
+                                        <% if(versao.ativo == 1){ %>
+                                            <option value="<%= versao.id %>"><%= versao.versao %></option>
+                                        <%}%>
+                            
+                                    <%})%>
+                                </select>
+                                <br>
+                                <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                            </div>
+                        </div>
+                        </div>
+                        <!--MODULOS CONTRATADOS-->
+                        
+                            <div class="ml-4"> 
+                                <div class="col">
                                     <label for="modulos_contratados" class="form-label"><strong>Módulos Contratados</strong></label>
-                                    <select name="modulos_contratados" class="form-control form-control-lg inputs" multiple>
-                                        <option value="">Selecione</option>
+                                    <div class="form-group">
                                         <% modulos.forEach((modulo) => { %>
-    
                                             <% if(modulo.ativo == 1){ %>
-                                                <option value="<%= modulo.id %>"><%= modulo.modulo %></option>
-                                            <%}%>
-                                
-                                        <%})%>                                    
-                                    </select>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" role="switch" id="modulo_<%= modulo.id %>" name="modulos_contratados[]" value="<%= modulo.id %>">
+                                                    <label class="form-check-label" for="modulo_<%= modulo.id %>"><%= modulo.modulo.toUpperCase() %></label>
+                                                </div>
+                                            <% } %>
+                                        <% }) %>
+                                    </div>
                                     <br>
                                     <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                                 </div>
                     
-                                <div class="col-md-6">
-                                    <label for="versao_sistema" class="form-label"><strong>Versão do Sistema</strong></label>
-                                    <select name="versao_sistema" class="form-control form-control-lg inputs">
-                                        <option value="">Selecione</option>
-                                        <% versao_sistema.forEach((versao) => { %>
-                                            
-                                            <% if(versao.ativo == 1){ %>
-                                                <option value="<%= versao.id %>"><%= versao.versao %></option>
-                                            <%}%>
-                                
-                                        <%})%>
-                                    </select>
-                                    <br>
-                                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-                                </div>
                             </div>
-                        </div>
-                        <br>
-                        <br>
                             <hr>
-                        <div class="container mt-4">
+                            <!--WEBSITE CONCORRENTE-->
+                        <div class="container">
                             <div class="row g-3 align-items-end"> 
                                 <div class="col-md-6">
                                     <label for="website_concorrente" class="form-label"><strong>Website Concorrente</strong></label>
@@ -101,7 +109,7 @@
                                     <br>
                                     <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                                 </div>
-                    
+                                <!--SISTEMA CONCORRENTE-->
                                 <div class="col-md-6">
                                     <label for="sistema_concorrente" class="form-label"><strong>Sistema Concorrente</strong></label>
                                     <select name="sistema_concorrente" class="form-control form-control-lg inputs">
@@ -117,19 +125,21 @@
                                     <br>
                                     <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                                 </div>
+                                <!--OBSERVACAO-->
+                                <div class="mb-3">
+                                    <label for="observacao" class="form-label"><strong>Observações</strong></label>
+                                    <textarea id="observacao" name="observacao" class="form-control form-control-lg"></textarea>
+                                </div>
                             </div>
                         </div>
                         
                     </div>
-    
-                        
-                    </div>
-    
                     <div class="card-footer">
                         <div onclick="cadastrarEntidade()" class="btn btn-success">Salvar</div>
                         <a href="/listar_entidades"><div class="btn btn-secondary">Voltar</div></a>
                     </div>
-                    
+                        
+                    </div>
                 </div>
             </form>
             

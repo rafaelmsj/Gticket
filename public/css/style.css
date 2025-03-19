@@ -4,6 +4,7 @@ body{
 header{
     margin-bottom: 5vh;
 }
+
 .msg_erro{
     color: rgb(216, 49, 49);
     font-size: 12px;
@@ -13,10 +14,24 @@ header{
 .visualizaSenha:hover {
     background-color: #c7c7c7;
 }
-
+#DivFiltros{
+    display: flex;
+}
 /* Configurações gerais */
 .container {
     margin-top: 20px;
+}
+/* Estilo para o botão */
+.custom-btn {
+    border: none;
+    background: transparent;
+}
+
+/* Estilo para o ícone */
+.custom-icon {
+    font-size: 1.25rem; /* Aumenta o tamanho da lupa */
+    color: rgb(138, 138, 138); /* Cor do ícone igual ao btn-primary */
+    background-color: transparent;
 }
 
 /* Estilo dos cards */
@@ -38,6 +53,9 @@ header{
 
 .card-body {
     padding: 20px;
+}
+.card-footer {
+    background-color: #fff;
 }
 
 /* Botões com ícones */
