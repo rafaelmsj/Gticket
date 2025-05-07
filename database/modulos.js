@@ -3,7 +3,7 @@ const connection = require('./db')
 
 const modulos = connection.define('modulos', {
     modulo: {
-        type: sequelize.STRING,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     ativo: {

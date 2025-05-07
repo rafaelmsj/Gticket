@@ -4,7 +4,7 @@ const connection = require('./db')
 var concorrentes = connection.define('concorrentes',{
 
     nome:{
-        type: sequelize.STRING,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     ativo: {

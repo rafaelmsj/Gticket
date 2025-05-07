@@ -3,12 +3,17 @@ const express = require('express')
 const app = express()
 const bcrypt = require('bcryptjs'); //criptografa senha
 const session = require('express-session');
+const Sequelize = require('sequelize')
 
 //BANCO DE DADOS
 const connection = require('./database/db') //TRAZ A A CONFIGURACAO DE CONEXAO DO BANCO DE DADOS 
 const entidades = require('./database/entidades') //TRAZ CONEXAO COM A TABELA DO BD
 const versao_sistema = require('./database/versao_sistema');
+const tipos_ticket = require('./database/tipos_ticket');
+const prioridades = require('./database/prioridades');
+const ticket_pausa = require('./database/ticket_pausa')
 const setores = require('./database/setores');
+const tickets = require('./database/tickets')
 const usuarios = require('./database/usuarios');
 const grupos_de_usuarios = require('./database/grupos_de_usuarios');
 const concorrentes = require('./database/concorrentes');
@@ -105,8 +110,34 @@ connection.authenticate()
 
 
 //ROTAS PRINCIPAIS
-app.get('/',(req,res)=>{
-    res.render('index')
+app.get('/', async (req,res)=>{
+    try{
+        const [ entidade, ticket, entidadeG, tipo, versao] = await Promise.all([
+            entidades.findAll({
+                order: [['id','DESC']],
+                limit: 4
+            }),
+            tickets.findAll({
+                order: [['id','DESC']],
+                limit: 4
+            }),
+            entidades.findAll(),
+            tipos_entidade.findAll(),
+            versao_sistema.findAll()
+        ])
+
+        res.render('index',{
+            entidades: entidade,
+            tickets: ticket,
+            entidadesG: entidadeG,
+            tipos: tipo,
+            versoes: versao
+        })
+    }
+    catch{
+
+    }
+    
 })
 
 app.get('/admin', verificarAutenticacao, (req, res) => {
@@ -134,6 +165,13 @@ app.post('/login', async (req, res) => {
 
     try {
         const usuarioEncontrado = await usuarios.findOne({ where: { usuario } });
+
+        if (!usuarioEncontrado) {
+            return res.json({
+                success: false,
+                message: '*Usuário inválido.'
+            });
+        }
 
         if (usuarioEncontrado.ativo !== 1) {
             return res.json( {
@@ -291,11 +329,12 @@ app.get('/listar_entidades', verificarAutenticacao, async (req, res) => {
         const totalPages = Math.ceil(totalEntidades / limit);
 
         // Busca os dados auxiliares
-        const [tipos, versoes, usuarioinfo, grupoinfo] = await Promise.all([
+        const [tipos, versoes, usuarioinfo, grupoinfo, ticket] = await Promise.all([
             tipos_entidade.findAll(),
             versao_sistema.findAll(),
             usuarios.findOne({ where: { id: idUsuario } }),
-            grupos_de_usuarios.findOne({ where: { id: idGrupo } })
+            grupos_de_usuarios.findOne({ where: { id: idGrupo } }),
+            tickets.findAll({where: {status_geral:{ [Op.notLike]: `finalizado` }}})
         ]);
 
         res.render('listar_entidades', {
@@ -308,7 +347,8 @@ app.get('/listar_entidades', verificarAutenticacao, async (req, res) => {
             infoGrupo: grupoinfo,
             filtros: { search, instalado, ordenar },
             ordenar: ordenar,
-            instalado: instalado
+            instalado: instalado,
+            tickets: ticket
         });
 
     } catch (err) {
@@ -318,10 +358,10 @@ app.get('/listar_entidades', verificarAutenticacao, async (req, res) => {
 });
 
 app.get('/inserir_entidades',verificarAutenticacao, verificarPermInserir,(req,res)=>{
-    tipos_entidade.findAll().then(tipos_entidade =>{
-        modulos.findAll().then(modulos => {
-            versao_sistema.findAll().then(versao_sistema => {
-                concorrentes.findAll().then(concorrentes =>{
+    tipos_entidade.findAll({order: [['tipo_entidade', 'ASC']]}).then(tipos_entidade =>{
+        modulos.findAll({order: [['modulo', 'ASC']]}).then(modulos => {
+            versao_sistema.findAll({order: [['versao', 'ASC']]}).then(versao_sistema => {
+                concorrentes.findAll({order: [['nome', 'ASC']]}).then(concorrentes =>{
                     res.render('inserir_entidades',{
                         tipos_entidade: tipos_entidade,
                         modulos: modulos,
@@ -370,7 +410,7 @@ app.post('/salvar_entidades',verificarAutenticacao,verificarPermInserir, async(r
             website_concorrente: website_concorrente,
             sistema_concorrente: sistema_concorrente,
             tipo_entidade: tipo_entidade,
-            modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(', ') : modulos_contratados,
+            modulos_contratados: Array.isArray(modulos_contratados) ? modulos_contratados.join(',') : modulos_contratados,
             versao_sistema: versao_sistema,
             instalado: instalado,
             observacao: observacao,
@@ -421,9 +461,9 @@ app.get('/alterar_entidades/:id',verificarAutenticacao,verificarPermAlterar,(req
         {where: {id:id}}
     ).then(entidade =>{
         tipos_entidade.findAll().then(tipos => {
-            versao_sistema.findAll().then(versao => {
-                modulos.findAll().then(modulos => {
-                    concorrentes.findAll().then(concorrentes => {
+            versao_sistema.findAll({order: [['versao','ASC']]}).then(versao => {
+                modulos.findAll({order: [['modulo','ASC']]}).then(modulos => {
+                    concorrentes.findAll({order: [['nome','ASC']]}).then(concorrentes => {
                         res.render('alterar_entidades',{
                             entidade: entidade,
                             tipos: tipos,
@@ -480,6 +520,231 @@ app.post('/update_entidade',verificarAutenticacao,verificarPermAlterar, async(re
         })
     }
 })
+
+app.get('/entidade/:id', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1; // Página atual (default: 1)
+        const limit = 5;                           // Registros por página
+        const offset = (page - 1) * limit;          // Calcula o deslocamento
+        const idEntidade = req.params.id;
+
+        // Busca a entidade
+        const entidadeEncontrada = await entidades.findOne({ where: { id: idEntidade } });
+
+        // Se não encontrar a entidade, retorna erro
+        if (!entidadeEncontrada) {
+            return res.status(404).json({ error: "Entidade não encontrada" });
+        }
+
+        // Buscar os dados relacionados em paralelo
+        const [concorrente, modulo, versao, tipo, ticket, tipo_ticket, prioridade] = await Promise.all([
+            concorrentes.findAll(),
+            modulos.findAll(),
+            versao_sistema.findOne({ where: { id: entidadeEncontrada.versao_sistema } }),
+            tipos_entidade.findOne({ where: { id: entidadeEncontrada.tipo_entidade } }),
+            tickets.findAndCountAll({ where: { id_entidade: idEntidade },order: [['id','DESC']], limit: limit, offset: offset}),
+            tipos_ticket.findAll(),
+            prioridades.findAll(),
+        ]);
+
+        const totaltickets = ticket.count;
+        const totalPages = Math.ceil(totaltickets / limit);
+
+
+        // Renderiza a página com os dados
+        res.render('entidade', {
+            entidade: entidadeEncontrada,
+            concorrentes: concorrente,
+            modulos: modulo || null, // Garante que será null caso não encontre
+            versao: versao || null,
+            tipo: tipo || null,
+            Tickets: ticket.rows || [],
+            tipos_ticket: tipo_ticket || null,
+            prioridades: prioridade || [],
+            currentPage: page,
+            totalPages: totalPages
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar entidade:", error);
+        res.status(500).json({ error: "Erro interno no servidor" });
+    }
+});
+
+app.get('/entidades', async (req, res) => {
+    try {
+        // Importando filtros da query string
+        const { instalado, tipo_entidade, versao, ticket, ordenar, search, exibir, data_inicial, data_final } = req.query;
+        
+        // Pegando a página da query string, com valor padrão 1 caso não seja fornecido
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(exibir, 10) || 10;  // Convertendo `exibir` para número inteiro
+        const offset = (page - 1) * limit; // Calcula o deslocamento para a consulta
+
+        // Pegando dados do usuário e grupo (caso necessário)
+        const idUsuario = req.session.usuarioId;
+        const idGrupo = req.session.grupo;
+        
+        // Trazendo as tabelas que são usadas para os filtros
+        const [tickets_geral, tipo, versao_sis, modulo_geral] = await Promise.all([
+            tickets.findAll({where: {status_geral: { [Op.notLike]: 'finalizado' }}}),
+            tipos_entidade.findAll(),
+            versao_sistema.findAll(),
+            modulos.findAll()
+        ]);
+
+        
+        // Filtros dinâmicos - base para consulta
+        const whereCondition = { ativo: 1 };
+
+        // Filtro de pesquisa (search) - exemplo: busca pela cidade
+        if (search && search.trim() !== "") {
+            whereCondition.cidade = { [Op.like]: `%${search}%` };
+        }
+
+        // Filtro de "Instalado"
+        if (instalado) whereCondition.instalado = instalado;
+
+        // Filtro para "Tipo de Entidade" - Aceita múltiplos valores (checkbox)
+        if (tipo_entidade) {
+            const tiposSelecionados = Array.isArray(tipo_entidade) ? tipo_entidade : [tipo_entidade];
+            whereCondition.tipo_entidade = { [Op.in]: tiposSelecionados };
+        }
+
+        // Filtro para "Versão" - Aceita múltiplos valores (checkbox)
+        if (versao) {
+            const versoesSelecionadas = Array.isArray(versao) ? versao : [versao];
+            whereCondition.versao_sistema = { [Op.in]: versoesSelecionadas };
+        }
+
+        // Filtro para "Ticket" - Aceita valores filtrados
+        if (ticket) {
+            if (ticket === '1') {
+                // Quando o ticket é "1", busca as entidades que estão associadas a algum ticket
+                const TicketsEncontrados = await tickets.findAll();  // Encontra todos os tickets
+                const idsEntidades = TicketsEncontrados.map(entidade => entidade.id_entidade);  // Mapeia os ids das entidades
+
+                if (idsEntidades.length > 0) {
+                    whereCondition.id = { [Op.in]: idsEntidades };  // Filtra as entidades com esses ids
+                }
+            }
+            else if (ticket === '0') {
+                // Quando o ticket é "0", busca as entidades que NÃO estão associadas a nenhum ticket
+                const TicketsEncontrados = await tickets.findAll({
+                    attributes: ['id_entidade'],
+                    where: { id_entidade: { [Op.ne]: null } }, // Filtra as entidades com tickets não nulos
+                });
+
+                const idsEntidadesComTicket = TicketsEncontrados.map(entidade => entidade.id_entidade);
+
+                // Filtra as entidades que NÃO estão nesses ids
+                whereCondition.id = {
+                    [Op.notIn]: idsEntidadesComTicket
+                };
+            }
+        }
+
+        var modulosg = req.query.modulo;
+
+        if (!Array.isArray(modulosg)) {
+            modulosg = modulosg ? [modulosg] : [];
+        }
+        
+        // Se "nenhum" for selecionado, filtra as entidades onde a coluna "modulos_contratados" é vazia
+        if (modulosg.includes('nenhum')) {
+            whereCondition.modulos_contratados = { [Op.eq]: '' };  // Filtra para colunas vazias
+        } else if (modulosg.length > 0) {
+            // Filtra as entidades com base nos módulos selecionados
+            whereCondition[Op.or] = modulosg.map(id => 
+                Sequelize.where(
+                    Sequelize.fn('FIND_IN_SET', id, Sequelize.col('modulos_contratados')),
+                    {
+                        [Op.gt]: 0
+                    }
+                )
+            );
+        }
+        
+        
+        if (data_inicial) {
+            if (data_final) {
+                whereCondition.createdAt = {
+                    [Op.between]: [data_inicial, data_final]
+                };
+            } else {
+                whereCondition.createdAt = {
+                    [Op.gte]: data_inicial
+                };
+            }
+        } else if (data_final) {
+            whereCondition.createdAt = {
+                [Op.lte]: data_final
+            };
+        }
+
+        // Definindo a ordenação
+        let orderCondition = [];
+        switch (ordenar) {
+            case 'mais_recente':
+                orderCondition = [['id', 'DESC']];
+                break;
+            case 'menos_recente':
+                orderCondition = [['id', 'ASC']];
+                break;
+            case 'a_z':
+                orderCondition = [['cidade', 'ASC'], ['estado', 'ASC']];
+                break;
+            case 'z_a':
+                orderCondition = [['cidade', 'DESC'], ['estado', 'DESC']];
+                break;
+            default:
+                orderCondition = [['id', 'DESC']];
+                break;
+        }
+
+        // Consultando as entidades com os filtros e a paginação
+        const result = await entidades.findAndCountAll({
+            where: whereCondition,
+            order: orderCondition,
+            limit: limit,
+            offset: offset
+        });
+
+        // Calculando o total de páginas para a navegação
+        const totalEntidades = result.count;
+        const totalPages = Math.ceil(totalEntidades / limit);
+
+        // Renderizando a página com os dados encontrados
+        res.render('entidades', {
+            currentPage: page,
+            totalPages: totalPages,
+            entidades: result.rows,
+            tickets: tickets_geral,
+            tipos: tipo,
+            versoes: versao_sis,
+            modulos: modulo_geral,
+            i: instalado,
+            t: ticket,
+            te: tipo_entidade,
+            v: versao,
+            m: modulosg,
+            o: ordenar,
+            e: exibir,
+            dt_i: data_inicial,
+            dt_f: data_final
+        });
+    } catch (err) {
+        // Caso ocorra algum erro, mostrando mensagem e log
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao trazer entidades',
+            error: err.message
+        });
+    }
+});
+
+
 
 
 
@@ -935,255 +1200,482 @@ app.post('/update_setor',verificarAutenticacao, verificarPermAlterar,async(req,r
 
 
 //ROTAS DE USUARIOS
-    app.get('/listar_usuarios',verificarAutenticacao,(req,res)=>{
-        const page = parseInt(req.query.page) || 1;
-        const limit = 20;
-        const offset = (page - 1) * limit;
-        const idUsuario = req.session.usuarioId
-        const idGrupo = req.session.grupo
-        
-    // Captura os filtros da requisição
-    const { search,  ordenar } = req.query;
+app.get('/listar_usuarios',verificarAutenticacao,(req,res)=>{
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+    const idUsuario = req.session.usuarioId
+    const idGrupo = req.session.grupo
+    
+// Captura os filtros da requisição
+const { search,  ordenar } = req.query;
 
-    // Filtros dinâmicos
-    const whereCondition = { ativo: 1 };
-    if (search) whereCondition.nome = { [Op.like]: `%${search}%` };
+// Filtros dinâmicos
+const whereCondition = { ativo: 1 };
+if (search) whereCondition.nome = { [Op.like]: `%${search}%` };
 
-    // Ordenação
-    let orderCondition = [];
-    switch (ordenar) {
-        case 'mais_recente':
-            orderCondition = [['id', 'DESC']];
-            break;
-        case 'menos_recente':
-            orderCondition = [['id', 'ASC']];
-            break;
-        case 'a_z':
-            orderCondition = [['nome', 'ASC']];
-            break;
-        case 'z_a':
-            orderCondition = [['nome', 'DESC']];
-            break;
-        default:
-            orderCondition = [['nome', 'ASC']];
-            break;
+// Ordenação
+let orderCondition = [];
+switch (ordenar) {
+    case 'mais_recente':
+        orderCondition = [['id', 'DESC']];
+        break;
+    case 'menos_recente':
+        orderCondition = [['id', 'ASC']];
+        break;
+    case 'a_z':
+        orderCondition = [['nome', 'ASC']];
+        break;
+    case 'z_a':
+        orderCondition = [['nome', 'DESC']];
+        break;
+    default:
+        orderCondition = [['nome', 'ASC']];
+        break;
+}
+
+
+    if(req.session.perm_usuarios !== 1){
+        return res.status(400).json({
+            success:false,
+            message: 'Você não tem permissão para acessar esta página.'
+        })
     }
 
+    usuarios.findAndCountAll({
+        where: whereCondition,
+        order: orderCondition,
+        limit: limit,
+        offset: offset
+    }).then(usuariosGeral=>{
+        usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
+            grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
+                const totalPages = Math.ceil(usuariosGeral.count / limit)
+                setores.findAll().then(setores =>{
+                    grupos_de_usuarios.findAll().then(grupos => {
+                        res.render('listar_usuarios',{
+                            usuarios: usuariosGeral.rows,
+                            currentPage: page,
+                            totalPages: totalPages,
+                            infoUser: usuarioinfo,
+                            infoGrupo: grupoinfo,
+                            setores: setores,
+                            grupos: grupos,
+                            ordenar: ordenar
+                        })    
+                    })
+                })
+            })
+        })    
+        
+    })
 
-        if(req.session.perm_usuarios !== 1){
+    
+
+    
+    
+})
+
+app.get('/inserir_usuarios',verificarAutenticacao,verificarPermInserir,(req,res)=>{
+    setores.findAll({order: [['setor','ASC']]}).then(setores => {
+        grupos_de_usuarios.findAll({
+            where: {ativo: 1},
+            order: [['grupo','ASC']]
+        }).then(grupos => {
+            res.render('inserir_usuarios',{
+                setores:setores,
+                grupos: grupos
+            })
+        })
+        
+    })    
+})
+
+app.post('/salvar_usuarios',verificarAutenticacao,verificarPermInserir, async (req, res) => {
+    try {
+        const { nome, usuario, setor, grupo, senha, confirmar_senha, perm_usuarios, perm_grupoUsuarios } = req.body;
+        const ativo = 1;
+
+        // Gerando o salt e hash da senha
+        const salt = await bcrypt.genSalt(10); // Gera um salt com fator de custo 10
+        const senhaHash = await bcrypt.hash(senha, salt); // Criptografa a senha
+
+
+        
+        if(nome.trim().length < 3){
             return res.status(400).json({
-                success:false,
-                message: 'Você não tem permissão para acessar esta página.'
+                success: false,
+                message: 'Digite um nome valido.'
+            })
+        }
+        
+        if(usuario.trim().length < 3){
+            return res.status(400).json({
+                success: false,
+                message: 'Digite um usúario valido.'
             })
         }
 
-        usuarios.findAndCountAll({
+        if(senha.length < 6){
+            return res.status(400).json({
+                success: false,
+                message: 'A senha deve ter pelomenos 6 digitos.'
+            })
+        }
+
+        if(senha !== confirmar_senha){
+            return res.status(400).json({
+                success: false,
+                message: 'As senhas não conferem.'
+            })
+        }
+
+        //VERIFICA SE O USUARIO JA ESTA CADASTRADO
+        const userExistente = await usuarios.findOne({where: {usuario: usuario.toLowerCase().trim()}})
+
+        if (userExistente){
+            return res.status(400).json({
+                success: false,
+                message: 'Este usúario já esta cadastrado.'
+            })
+        }
+
+        //VERIFICA SE JA TEM ESSE NOME CADASTRADO
+        const nomeExistente = await usuarios.findOne({where: {nome: nome.toLowerCase().trim()}})
+
+        if(nomeExistente){
+            return res.status(400).json({
+                success: false,
+                message: 'Esse nome já está vinculado a um usúario.'
+            })
+        }
+
+
+        await usuarios.create({
+            nome: nome.toLowerCase().trim(),
+            usuario: usuario.toLowerCase().trim(),
+            setor: setor,
+            perm_grupo_usuarios: perm_grupoUsuarios,
+            perm_usuarios: perm_usuarios,
+            grupo: grupo,
+            senha: senhaHash,
+            ativo: ativo
+        });
+
+        log.create({
+            usuario: res.locals.usuarioid,
+            acao: 'inserido',
+            tabela: 'usuarios',
+            id_registro: 0
+        }).then(()=>{
+            return res.json({ success: true, message: 'Usúario criado!' });
+        })
+    } catch (error) {
+        console.error("Erro ao salvar usuário:", error);
+        res.status(500).send("Erro ao salvar usuário.");
+    }
+});
+
+app.post('/deletar_usuario',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
+    var id = req.body.id
+
+    usuarios.update(
+        {ativo: 0},
+        {where: {id:id}}
+    ).then(()=>{
+        log.create({
+            usuario: res.locals.usuarioid,
+            acao: 'deletado',
+            tabela: 'usuarios',
+            id_registro: id
+        }).then(()=>{
+            res.redirect('/listar_usuarios')
+        })
+    })
+})
+
+app.get('/alterar_usuarios/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
+    const id = req.params.id
+
+    usuarios.findOne(
+        {where: {id:id}}
+    ).then(usuario => {
+        setores.findAll({order: [['setor','ASC']]}).then(setores =>{
+            grupos_de_usuarios.findAll({order: [['grupo','ASC']]}).then(grupos =>{
+
+                res.render('alterar_usuario',{
+                    usuario: usuario,
+                    setores: setores,
+                    grupos:grupos
+                })
+            })
+        })
+
+    })
+})
+
+app.post('/update_usuarios',verificarAutenticacao,verificarPermAlterar, async(req,res)=>{
+    const id = req.body.id
+    const setor = req.body.setor
+    const grupo = req.body.grupo
+    const perm_usuarios = req.body.perm_usuarios
+    const perm_grupoUsuarios = req.body.perm_grupoUsuarios
+    
+    try {
+        await usuarios.update(
+            {setor: setor,
+            grupo: grupo,
+            perm_grupo_usuarios: perm_grupoUsuarios,
+            perm_usuarios: perm_usuarios},
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'usuarios',
+                id_registro: id
+            })
+                res.json({
+                    success: true,
+                    message: 'Usúario alterado!'
+                })
+    }
+    catch(error){
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao alterar usúario',
+            error: error
+        })
+    }
+
+})
+
+app.get('/usuario/:id', async (req,res)=> {
+    try {
+        const id = req.params.id
+        const page = parseInt(req.query.page) || 1; // Página atual (default: 1)
+        const limit = 5;                           // Registros por página
+        const offset = (page - 1) * limit;          // Calcula o deslocamento
+
+        // Busca a entidade
+        const UsuarioEncontrado = await usuarios.findOne({ where: { id: id } });
+
+        // Se não encontrar a entidade, retorna erro
+        if (!UsuarioEncontrado) {
+            return res.status(404).json({ error: "Usúario não encontrado" });
+        }
+
+        // Buscar os dados relacionados em paralelo
+        const [entidade, tipo, ticket, tipo_ticket, prioridade, setor, TicketTotal] = await Promise.all([
+            entidades.findAll(),
+            tipos_entidade.findAll(),
+            tickets.findAndCountAll({ where: {
+                [Op.or]: [
+                  { responsavel: id }, // responsavel é igual ao id
+                  { auxiliares: { [Op.like]: `%,${id},%` } }, // Verifica se o id está entre os ids na string (com vírgulas)
+                  { auxiliares: { [Op.like]: `${id},%` } },   // Verifica se o id é o primeiro na lista
+                  { auxiliares: { [Op.like]: `%,${id}` } },   // Verifica se o id é o último na lista
+                  { auxiliares: id }                          // Verifica se o id é o único valor na lista
+                ]
+              },order: [['id','DESC']], limit: limit, offset: offset}),
+            tipos_ticket.findAll(),
+            prioridades.findAll(),
+            setores.findOne({where: {id:UsuarioEncontrado.setor}}),
+            tickets.findAll()
+        ]);
+
+        const totaltickets = ticket.count;
+        const totalPages = Math.ceil(totaltickets / limit);
+
+
+        // Renderiza a página com os dados
+        res.render('usuario', {
+            usuario: UsuarioEncontrado,
+            entidades: entidade || null,
+            tipos: tipo || null,
+            Tickets: ticket.rows || [],
+            tipos_ticket: tipo_ticket || null,
+            prioridades: prioridade || [],
+            currentPage: page,
+            totalPages: totalPages,
+            setor: setor,
+            TicketTotal: TicketTotal
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar usúario:", error);
+        res.status(500).json({ error: "Erro interno no servidor" });
+    }
+})
+
+app.get('/usuarios', async (req, res) => {
+    try {
+        // Importando filtros da query string
+        const { setor, ticket, ordenar, search, exibir, data_inicial, data_final } = req.query;
+        
+        // Pegando a página da query string, com valor padrão 1 caso não seja fornecido
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(exibir, 10) || 10;  // Convertendo `exibir` para número inteiro
+        const offset = (page - 1) * limit; // Calcula o deslocamento para a consulta
+
+        // Pegando dados do usuário e grupo (caso necessário)
+        const idUsuario = req.session.usuarioId;
+        const idGrupo = req.session.grupo;
+        
+        // Trazendo as tabelas que são usadas para os filtros
+        const [tickets_geral, tipo, setorG] = await Promise.all([
+            tickets.findAll({where: {status_geral: { [Op.notLike]: 'finalizado' }}}),
+            tipos_entidade.findAll(),
+            setores.findAll()
+        ]);
+
+        
+        // Filtros dinâmicos - base para consulta
+        const whereCondition = { id: { [Op.notLike]: 1 } };
+
+        // Filtro de pesquisa (search) - exemplo: busca pela cidade
+        if (search && search.trim() !== "") {
+            whereCondition.nome = { [Op.like]: `%${search}%` };
+        }
+       
+        // Filtro para "Tipo de Entidade" - Aceita múltiplos valores (checkbox)
+        if (setor) {
+            const setorSelecionados = Array.isArray(setor) ? setor : [setor];
+            whereCondition.setor = { [Op.in]: setorSelecionados };
+        }
+
+       // Filtro para "Usuário" - Aceita valores filtrados
+        if (ticket) {
+            if (ticket === '1') {
+                // Quando o ticket é "1", busca os usuários que estão associados a algum ticket (responsável ou auxiliar)
+                const TicketsEncontrados = await tickets.findAll();  // Encontra todos os tickets
+                
+                // Filtra os usuários que estão associados a algum ticket (responsável ou auxiliar)
+                const idsUsuariosComTicket = TicketsEncontrados.reduce((acc, ticket) => {
+                    // Verifica se o usuário é o responsável
+                    if (ticket.responsavel) {
+                        acc.push(ticket.responsavel);  // Adiciona o responsável
+                    }
+                    
+                    // Verifica se o usuário está na lista de auxiliares
+                    const auxiliaresArray = ticket.auxiliares.split(',').map(aux => aux.trim());
+                    auxiliaresArray.forEach(aux => {
+                        if (aux) acc.push(aux);  // Adiciona cada auxiliar encontrado
+                    });
+                    
+                    return acc;
+                }, []);
+
+                // Remove IDs duplicados
+                const uniqueIdsUsuariosComTicket = [...new Set(idsUsuariosComTicket)];
+
+                // Verifica se algum usuário foi encontrado
+                if (uniqueIdsUsuariosComTicket.length > 0) {
+                    whereCondition.id = { [Op.in]: uniqueIdsUsuariosComTicket };  // Filtra os usuários associados aos tickets
+                }
+            }
+            else if (ticket === '0') {
+                // Quando o ticket é "0", busca os usuários que NÃO estão associados a nenhum ticket (nem como responsável, nem como auxiliar)
+                const TicketsEncontrados = await tickets.findAll({
+                    attributes: ['responsavel', 'auxiliares'],  // Pegando apenas os campos necessários
+                });
+
+                const idsUsuariosComTicket = TicketsEncontrados.reduce((acc, ticket) => {
+                    // Verifica se o ticket tem algum responsável ou auxiliares
+                    if (ticket.responsavel) {
+                        acc.push(ticket.responsavel);  // Adiciona o responsável
+                    }
+                    const auxiliaresArray = ticket.auxiliares.split(',').map(aux => aux.trim());
+                    auxiliaresArray.forEach(aux => {
+                        if (aux) acc.push(aux);  // Adiciona cada auxiliar encontrado
+                    });
+                    return acc;
+                }, []);
+
+                // Remove IDs duplicados
+                const uniqueIdsUsuariosComTicket = [...new Set(idsUsuariosComTicket)];
+
+                // Filtra os usuários que NÃO estão nesses ids
+                whereCondition.id = {
+                    [Op.notIn]: uniqueIdsUsuariosComTicket
+                };
+            }
+        }
+
+        if (data_inicial) {
+            if (data_final) {
+                whereCondition.createdAt = {
+                    [Op.between]: [data_inicial, data_final]
+                };
+            } else {
+                whereCondition.createdAt = {
+                    [Op.gte]: data_inicial
+                };
+            }
+        } else if (data_final) {
+            whereCondition.createdAt = {
+                [Op.lte]: data_final
+            };
+        }
+
+        // Definindo a ordenação
+        let orderCondition = [];
+        switch (ordenar) {
+            case 'mais_recente':
+                orderCondition = [['id', 'DESC']];
+                break;
+            case 'menos_recente':
+                orderCondition = [['id', 'ASC']];
+                break;
+            case 'a_z':
+                orderCondition = [['nome', 'ASC']];
+                break;
+            case 'z_a':
+                orderCondition = [['nome', 'DESC']];
+                break;
+            default:
+                orderCondition = [['id', 'DESC']];
+                break;
+        }
+
+        // Consultando as entidades com os filtros e a paginação
+        const result = await usuarios.findAndCountAll({
             where: whereCondition,
             order: orderCondition,
             limit: limit,
             offset: offset
-        }).then(usuariosGeral=>{
-            usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
-                grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
-                    const totalPages = Math.ceil(usuariosGeral.count / limit)
-                    setores.findAll().then(setores =>{
-                        grupos_de_usuarios.findAll().then(grupos => {
-                            res.render('listar_usuarios',{
-                                usuarios: usuariosGeral.rows,
-                                currentPage: page,
-                                totalPages: totalPages,
-                                infoUser: usuarioinfo,
-                                infoGrupo: grupoinfo,
-                                setores: setores,
-                                grupos: grupos,
-                                ordenar: ordenar
-                            })    
-                        })
-                    })
-                })
-            })    
-            
-        })
+        });
 
-        
-    
-        
-        
-    })
+        // Calculando o total de páginas para a navegação
+        const totalUsuarios = result.count;
+        const totalPages = Math.ceil(totalUsuarios / limit);
 
-    app.get('/inserir_usuarios',verificarAutenticacao,verificarPermInserir,(req,res)=>{
-        setores.findAll().then(setores => {
-            grupos_de_usuarios.findAll({
-                where: {ativo: 1}
-            }).then(grupos => {
-                res.render('inserir_usuarios',{
-                    setores:setores,
-                    grupos: grupos
-                })
-            })
-            
-        })    
-    })
+        // Renderizando a página com os dados encontrados
+        res.render('usuarios', {
+            currentPage: page,
+            totalPages: totalPages,
+            usuarios: result.rows,
+            tickets: tickets_geral,
+            tipos: tipo,
+            setores: setorG,
+            t: ticket,
+            se: setor,
+            o: ordenar,
+            e: exibir,
+            dt_i: data_inicial,
+            dt_f: data_final
+        });
 
-    app.post('/salvar_usuarios',verificarAutenticacao,verificarPermInserir, async (req, res) => {
-        try {
-            const { nome, usuario, setor, grupo, senha, confirmar_senha, perm_usuarios, perm_grupoUsuarios } = req.body;
-            const ativo = 1;
-
-            // Gerando o salt e hash da senha
-            const salt = await bcrypt.genSalt(10); // Gera um salt com fator de custo 10
-            const senhaHash = await bcrypt.hash(senha, salt); // Criptografa a senha
-
-
-            
-            if(nome.trim().length < 3){
-                return res.status(400).json({
-                    success: false,
-                    message: 'Digite um nome valido.'
-                })
-            }
-            
-            if(usuario.trim().length < 3){
-                return res.status(400).json({
-                    success: false,
-                    message: 'Digite um usúario valido.'
-                })
-            }
-
-            if(senha.length < 6){
-                return res.status(400).json({
-                    success: false,
-                    message: 'A senha deve ter pelomenos 6 digitos.'
-                })
-            }
-
-            if(senha !== confirmar_senha){
-                return res.status(400).json({
-                    success: false,
-                    message: 'As senhas não conferem.'
-                })
-            }
-
-            //VERIFICA SE O USUARIO JA ESTA CADASTRADO
-            const userExistente = await usuarios.findOne({where: {usuario: usuario.toLowerCase().trim()}})
-
-            if (userExistente){
-                return res.status(400).json({
-                    success: false,
-                    message: 'Este usúario já esta cadastrado.'
-                })
-            }
-
-            //VERIFICA SE JA TEM ESSE NOME CADASTRADO
-            const nomeExistente = await usuarios.findOne({where: {nome: nome.toLowerCase().trim()}})
-
-            if(nomeExistente){
-                return res.status(400).json({
-                    success: false,
-                    message: 'Esse nome já está vinculado a um usúario.'
-                })
-            }
-
-
-            await usuarios.create({
-                nome: nome.toLowerCase().trim(),
-                usuario: usuario.toLowerCase().trim(),
-                setor: setor,
-                perm_grupo_usuarios: perm_grupoUsuarios,
-                perm_usuarios: perm_usuarios,
-                grupo: grupo,
-                senha: senhaHash,
-                ativo: ativo
-            });
-
-            log.create({
-                usuario: res.locals.usuarioid,
-                acao: 'inserido',
-                tabela: 'usuarios',
-                id_registro: 0
-            }).then(()=>{
-                return res.json({ success: true, message: 'Usúario criado!' });
-            })
-        } catch (error) {
-            console.error("Erro ao salvar usuário:", error);
-            res.status(500).send("Erro ao salvar usuário.");
-        }
-    });
-
-    app.post('/deletar_usuario',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
-        var id = req.body.id
-
-        usuarios.update(
-            {ativo: 0},
-            {where: {id:id}}
-        ).then(()=>{
-            log.create({
-                usuario: res.locals.usuarioid,
-                acao: 'deletado',
-                tabela: 'usuarios',
-                id_registro: id
-            }).then(()=>{
-                res.redirect('/listar_usuarios')
-            })
-        })
-    })
-
-    app.get('/alterar_usuarios/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
-        const id = req.params.id
-
-        usuarios.findOne(
-            {where: {id:id}}
-        ).then(usuario => {
-            setores.findAll().then(setores =>{
-                grupos_de_usuarios.findAll().then(grupos =>{
-
-                    res.render('alterar_usuario',{
-                        usuario: usuario,
-                        setores: setores,
-                        grupos:grupos
-                    })
-                })
-            })
-
-        })
-    })
-
-    app.post('/update_usuarios',verificarAutenticacao,verificarPermAlterar, async(req,res)=>{
-        const id = req.body.id
-        const setor = req.body.setor
-        const grupo = req.body.grupo
-        const perm_usuarios = req.body.perm_usuarios
-        const perm_grupoUsuarios = req.body.perm_grupoUsuarios
-        
-        try {
-            await usuarios.update(
-                {setor: setor,
-                grupo: grupo,
-                perm_grupo_usuarios: perm_grupoUsuarios,
-                perm_usuarios: perm_usuarios},
-                {where: {id:id}}
-            )
-                log.create({
-                    usuario: res.locals.usuarioid,
-                    acao: 'alterado',
-                    tabela: 'usuarios',
-                    id_registro: id
-                })
-                    res.json({
-                        success: true,
-                        message: 'Usúario alterado!'
-                    })
-        }
-        catch(error){
-            res.status(500).json({
-                success: false,
-                message: 'Erro ao alterar usúario',
-                error: error
-            })
-        }
-
-    })
-
+    } catch (err) {
+        // Caso ocorra algum erro, mostrando mensagem e log
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao trazer usúarios',
+            error: err.message
+        });
+    }
+});
 
 
 //ROTAS DE CONFIGURAÇÃO DE USUARIO
@@ -2013,7 +2505,7 @@ app.post('/deletar_tipo_entidade',verificarAutenticacao,verificarPermDeletar,(re
     })
 })
 
-app.get('/alterar_tipos_de_enteidade/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
+app.get('/alterar_tipos_de_entidade/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
     const id = req.params.id
 
     tipos_entidade.findOne(
@@ -2078,6 +2570,914 @@ app.post('/update_tipo_entidade',verificarAutenticacao, verificarPermAlterar,asy
     }
 
 })
+
+
+
+//PARTE RELACIONADA AOS TICKETS
+//ROTAS DE PRIORIDADE
+app.get('/listar_prioridades',verificarAutenticacao,(req,res)=>{
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit
+    const idUsuario = req.session.usuarioId
+    const idGrupo = req.session.grupo
+
+    // Captura os filtros da requisição
+    const { search,  ordenar } = req.query;
+
+    // Filtros dinâmicos
+    const whereCondition = { ativo: 1 };
+    if (search) whereCondition.prioridade = { [Op.like]: `%${search}%` };
+
+    // Ordenação
+    let orderCondition = [];
+    switch (ordenar) {
+        case 'mais_recente':
+            orderCondition = [['id', 'DESC']];
+            break;
+        case 'menos_recente':
+            orderCondition = [['id', 'ASC']];
+            break;
+        case 'a_z':
+            orderCondition = [['prioridade', 'ASC']];
+            break;
+        case 'z_a':
+            orderCondition = [['prioridade', 'DESC']];
+            break;
+        default:
+            orderCondition = [['prioridade', 'ASC']];
+            break;
+    }
+
+    prioridades.findAndCountAll({
+        where: whereCondition,
+        order: orderCondition,
+        limit: limit,
+        offset: offset
+    }).then(prioridades => {
+        usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
+            grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
+                const totalPages = Math.ceil(prioridades.count / limit)
+                res.render('listar_prioridades',{
+                    prioridades: prioridades.rows,
+                    totalPages: totalPages,
+                    currentPage: page,
+                    infoUser: usuarioinfo,
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
+                })
+            })
+        })    
+
+    })
+    
+})
+
+app.get('/inserir_prioridade',verificarAutenticacao,verificarPermInserir,(req,res)=>{
+    res.render('inserir_prioridade')
+})
+
+app.post('/salvar_prioridade',verificarAutenticacao,verificarPermInserir,async(req,res)=>{
+    const prioridade = req.body.prioridade.toLowerCase().trim()
+
+    const prioridadeEncontrada = await prioridades.findOne({
+        where: {
+            prioridade: prioridade,
+            ativo: 1
+        }
+    })
+
+
+    if(prioridadeEncontrada){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse tipo de prioridade já esta cadastrado.'
+        })
+    }
+
+    try {
+        await prioridades.create({
+            prioridade: prioridade,
+            ativo: 1
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'prioridades',
+                id_registro: 0
+            })  
+                return res.json({
+                    success: true,
+                    message: 'Tipo de prioridade cadastrada!'
+                })
+
+    }
+    catch(error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar tipo.',
+            error: error
+        })
+    }
+})
+
+app.post('/deletar_prioridade',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
+    var id = req.body.id
+
+    prioridades.update(
+        {ativo: 0},
+        {where: {id:id}}
+    ).then(()=>{
+        log.create({
+            usuario: res.locals.usuarioid,
+            acao: 'deletado',
+            tabela: 'prioridades',
+            id_registro: id
+        }).then(()=>{
+            res.redirect('/listar_prioridades')
+        })
+    })
+})
+
+app.get('/alterar_prioridade/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
+    const id = req.params.id
+
+    prioridades.findOne(
+        {where: {id:id}}
+    ).then(prioridade =>{
+        res.render('alterar_prioridade',{
+            prioridade: prioridade
+        })
+    })
+})
+
+app.post('/update_prioridade',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
+    const id = req.body.id
+    const prioridade = req.body.prioridade.toLowerCase().trim()
+
+    const prioridadeEncontrada = await prioridades.findOne({
+        where: {
+            prioridade: prioridade, 
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
+        }
+    })
+
+
+    if(prioridadeEncontrada){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse tipo de prioridade já esta cadastrado.'
+        })
+    }
+
+    try {
+        await prioridades.update(
+            {prioridade: prioridade},
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'prioridades',
+                id_registro: id
+            })  
+                return res.json({
+                    success: true,
+                    message: 'Tipo de prioridade alterado!'
+                })
+    }
+    catch(error){
+        return res.json({
+            success: false,
+            message: 'Erro ao alterar tipo de prioridade.',
+            error: error
+        })
+    }
+
+})
+
+
+
+//ROTAS DE TIPOS DE TICKETS
+app.get('/listar_tipos_ticket',verificarAutenticacao,(req,res)=>{
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit
+    const idUsuario = req.session.usuarioId
+    const idGrupo = req.session.grupo
+
+       // Captura os filtros da requisição
+       const { search,  ordenar } = req.query;
+
+       // Filtros dinâmicos
+       const whereCondition = { ativo: 1 };
+       if (search) whereCondition.tipo_ticket = { [Op.like]: `%${search}%` };
+   
+       // Ordenação
+       let orderCondition = [];
+       switch (ordenar) {
+           case 'mais_recente':
+               orderCondition = [['id', 'DESC']];
+               break;
+           case 'menos_recente':
+               orderCondition = [['id', 'ASC']];
+               break;
+           case 'a_z':
+               orderCondition = [['tipo_ticket', 'ASC']];
+               break;
+           case 'z_a':
+               orderCondition = [['tipo_ticket', 'DESC']];
+               break;
+           default:
+               orderCondition = [['tipo_ticket', 'ASC']];
+               break;
+       }
+
+    tipos_ticket.findAndCountAll({
+        where: whereCondition,
+        order: orderCondition,
+        limit: limit,
+        offset: offset
+    }).then(tipos => {
+        usuarios.findOne({where: {id:idUsuario}}).then(usuarioinfo =>{
+            grupos_de_usuarios.findOne({where: {id:idGrupo}}).then(grupoinfo =>{
+                const totalPages = Math.ceil(tipos.count / limit)
+                res.render('listar_tipos_ticket',{
+                    tipos: tipos.rows,
+                    totalPages: totalPages,
+                    currentPage: page,
+                    infoUser: usuarioinfo,
+                    infoGrupo: grupoinfo,
+                    ordenar: ordenar
+                })
+            })
+         })    
+
+    })
+    
+})
+
+app.get('/inserir_tipos_ticket',verificarAutenticacao,verificarPermInserir,(req,res)=>{
+    res.render('inserir_tipos_ticket')
+})
+
+app.post('/salvar_tipos_ticket',verificarAutenticacao,verificarPermInserir,async(req,res)=>{
+    const tipo_ticket = req.body.tipo_ticket.toLowerCase().trim()
+
+    const tipoEncontrado = await tipos_ticket.findOne({
+        where: {
+            tipo_ticket: tipo_ticket,
+            ativo: 1
+        }
+    })
+
+    if(tipo_ticket.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um tipo de ticket válido.'
+        })
+    }
+
+    if(tipoEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse tipo de ticket já esta cadastrado.'
+        })
+    }
+
+    try {
+        await tipos_ticket.create({
+            tipo_ticket: tipo_ticket,
+            ativo: 1
+        })
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'inserido',
+                tabela: 'tipos_tickets',
+                id_registro: 0
+            })  
+                return res.json({
+                    success: true,
+                    message: 'Tipo de ticket cadastrado!'
+                })
+
+    }
+    catch(error){
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao cadastrar tipo.',
+            error: error
+        })
+    }
+})
+
+app.post('/deletar_tipos_ticket',verificarAutenticacao,verificarPermDeletar,(req,res)=>{
+    var id = req.body.id
+
+    tipos_ticket.update(
+        {ativo: 0},
+        {where: {id:id}}
+    ).then(()=>{
+        log.create({
+            usuario: res.locals.usuarioid,
+            acao: 'deletado',
+            tabela: 'tipos_tickets',
+            id_registro: id
+        }).then(()=>{
+            res.redirect('/listar_tipos_ticket')
+        })
+    })
+})
+
+app.get('/alterar_tipos_ticket/:id',verificarAutenticacao,verificarPermAlterar,(req,res)=>{
+    const id = req.params.id
+
+    tipos_ticket.findOne(
+        {where: {id:id}}
+    ).then(tipo =>{
+        res.render('alterar_tipos_ticket',{
+            tipo: tipo
+        })
+    })
+})
+
+app.post('/update_tipos_ticket',verificarAutenticacao, verificarPermAlterar,async(req,res)=>{
+    const id = req.body.id
+    const tipo_ticket = req.body.tipo_ticket.toLowerCase().trim()
+
+    const tipoEncontrado = await tipos_ticket.findOne({
+        where: {
+            tipo_ticket: tipo_ticket, 
+            ativo: 1,
+            id: {
+                [Op.ne]: id
+            }
+        }
+    })
+
+    if(tipo_ticket.length < 3){
+        return res.status(400).json({
+            success: false,
+            message: 'Digite um tipo de ticket válido.'
+        })
+    }
+
+    if(tipoEncontrado){
+        return res.status(400).json({
+            success: false,
+            message: 'Esse tipo de ticket já esta cadastrado.'
+        })
+    }
+
+    try {
+        await tipos_ticket.update(
+            {tipo_ticket: tipo_ticket},
+            {where: {id:id}}
+        )
+            log.create({
+                usuario: res.locals.usuarioid,
+                acao: 'alterado',
+                tabela: 'tipos_tickets',
+                id_registro: id
+            })  
+                return res.json({
+                    success: true,
+                    message: 'Tipo de ticket alterado!'
+                })
+    }
+    catch(error){
+        return res.json({
+            success: false,
+            message: 'Erro ao alterar tipo de ticket.',
+            error: error
+        })
+    }
+
+})
+
+
+
+//ROTAS DE TICKETS
+app.get('/listar_tickets', verificarAutenticacao, async (req,res) => {
+         
+        const page = parseInt(req.query.page) || 1;
+        const limit = 20;
+        const offset = (page - 1) * limit
+        const idUsuario = req.session.usuarioId
+        const idGrupo = req.session.grupo
+
+           // Captura os filtros da requisição
+           const { search,  ordenar, TipoTicketFiltro, PrioridadeFiltro, statusFiltro } = req.query;
+
+           // Filtros dinâmicos
+           const whereCondition = {}
+            // Filtro de busca por entidades
+            if (search) { 
+                const entidadesEncontradas = await entidades.findAll({
+                    where: { cidade: { [Op.like]: `%${search}%` } } // Ajuste conforme o campo correto
+                });
+                const idsEntidades = entidadesEncontradas.map(entidade => entidade.id); // Coleta os IDs das entidades encontradas
+                
+                if (idsEntidades.length > 0) {
+                    whereCondition.id_entidade = { [Op.in]: idsEntidades }; // Usa Op.in para filtrar pelas entidades encontradas
+                } else {
+                    whereCondition.id_entidade = null; // Se nenhuma entidade for encontrada
+                }
+            }
+
+           if (TipoTicketFiltro) whereCondition.id_tipo = TipoTicketFiltro
+
+           if (PrioridadeFiltro) whereCondition.id_prioridade = PrioridadeFiltro
+
+           if (statusFiltro !== undefined) {
+                if (statusFiltro === '') {
+                    delete whereCondition.status_geral; // Remove o filtro se "Todos" for selecionado
+                } else {
+                    whereCondition.status_geral = statusFiltro
+                }
+            }
+
+            // Verificação do parâmetro de idEntidade
+            const idEntidade = req.query.idEntidade || 0
+            if (idEntidade !== 0) {
+                whereCondition.id_entidade = idEntidade; // Aplica o filtro para id_entidade
+            }
+           
+
+           // Ordenação
+           let orderCondition = [];
+           switch (ordenar) {
+               case 'mais_recente':
+                   orderCondition = [['id', 'DESC']];
+                   break;
+               case 'menos_recente':
+                   orderCondition = [['id', 'ASC']];
+                   break;
+               case 'a_z':
+                   orderCondition = [['id_entidade', 'ASC']];
+                   break;
+               case 'z_a':
+                   orderCondition = [['id_entidade', 'DESC']];
+                   break;
+               default:
+                   orderCondition = [['id_entidade', 'ASC']];
+                   break;
+           }
+
+                   // Busca entidades com paginação e filtro
+        const result = await tickets.findAndCountAll({
+            where: whereCondition,
+            order: orderCondition,
+            limit: limit,
+            offset: offset
+        });
+
+        const totalEntidades = result.count;
+        const totalPages = Math.ceil(totalEntidades / limit);
+
+        const [ grupos, usuario, entidade, prioridade, tipo, tipo_entidade] = await Promise.all([
+            grupos_de_usuarios.findOne({ where: { id: idGrupo } }),
+            usuarios.findOne({where: {id:idUsuario}}),
+            entidades.findAll(),
+            prioridades.findAll(),
+            tipos_ticket.findAll(),
+            tipos_entidade.findAll()
+        ])
+
+        res.render('listar_tickets',{
+            tickets: result.rows,
+            currentPage: page,
+            totalPages: totalPages,
+            infoUser: usuario,
+            infoGrupo: grupos,
+            filtros: { search, ordenar },
+            ordenar: ordenar,
+            TipoTicketFiltro: TipoTicketFiltro || '',
+            PrioridadeFiltro: PrioridadeFiltro || '',
+            statusFiltro: statusFiltro || '',
+            entidades: entidade,
+            prioridades: prioridade,
+            tipos: tipo,
+            tipos_entidade: tipo_entidade
+
+        })
+})
+
+app.get('/inserir_ticket',verificarAutenticacao, verificarPermInserir, async(req,res) => {
+
+    try {
+
+        const [ tipos, prioridade, entidade, tipo_entidade] = await Promise.all([
+            tipos_ticket.findAll({where: {ativo:1}, order: [['tipo_ticket','ASC']]}),
+            prioridades.findAll({where: {ativo:1}, order: [['prioridade','ASC']]}),
+            entidades.findAll({where: {ativo: 1}, order: [['cidade','ASC'], ['estado','ASC']]}),
+            tipos_entidade.findAll()
+        ])
+
+        res.render('inserir_ticket',{
+            tipos: tipos,
+            prioridades: prioridade,
+            entidades: entidade,
+            tipos_entidade: tipo_entidade
+        })
+    }
+    catch {
+
+    }
+
+
+})
+
+app.post('/salvar_ticket', verificarAutenticacao, verificarPermInserir, async (req,res)=>{
+    const id_usuario = req.session.usuarioId
+    
+    const { id_entidade, id_tipo, id_prioridade, assunto, descricao } = req.body
+
+    try{
+
+        if(assunto.length < 5){
+            res.json({
+                success: false,
+                message: 'Insira um assunto válido.'
+            })
+        }
+
+
+        await tickets.create({
+            id_entidade: id_entidade,
+            id_tipo: id_tipo,
+            id_prioridade: id_prioridade,
+            assunto: assunto,
+            descricao: descricao,
+            dt_previsao: '0001-01-01',
+            dt_inicio_ticket: '0001-01-01',
+            observacao: '',
+            observacao_interna: '',
+            responsavel: 0,
+            auxiliares: '',
+            status_geral: 'aguardando',
+            dt_finalizado: '0001-01-01'
+        })
+
+        log.create({
+            usuario: id_usuario,
+            acao: 'inserido',
+            tabela: 'tickets',
+            id_registro: 0
+        })
+
+            return res.json({
+                success: true,
+                message: 'Ticket Registrado!'
+            })
+
+        
+
+    }catch {
+
+    }
+})
+
+app.get('/alterar_ticket/:id', verificarAutenticacao, verificarPermAlterar, async (req,res) => {
+    try { 
+        
+        const idTicket = req.params.id
+
+        const ticketEncontrado = await tickets.findOne({where: {id: idTicket}})
+
+        const [ entidade, tipo, prioridade, usuario ] = await Promise.all([
+            entidades.findOne({where: {id:ticketEncontrado.id_entidade}}),
+            tipos_ticket.findOne({where: {id:ticketEncontrado.id_tipo}}),
+            prioridades.findOne({where: {id:ticketEncontrado.id_prioridade}}),
+            usuarios.findAll()
+            
+        ])
+
+        const tipo_entidade = await tipos_entidade.findOne({where: {id:entidade.tipo_entidade}})
+
+        res.render('alterar_ticket',{
+            ticket: ticketEncontrado,
+            entidade: entidade,
+            tipo: tipo,
+            prioridade: prioridade,
+            usuarios: usuario,
+            tipo_entidade: tipo_entidade
+        })
+
+
+    }
+    catch {
+        res.status(500).json({
+            sucess: false,
+            message: 'Erro ao alterar entidade'
+        })
+    }
+})
+
+app.post('/update_ticket', verificarAutenticacao, verificarPermAlterar, async(req,res)=> {
+    
+    const id = req.body.id
+    const previsao = req.body.previsao
+    const status_geral = req.body.status_geral
+    const id_responsavel = req.body.id_responsavel
+    const id_auxiliar = req.body.id_auxiliar
+    const obs = req.body.obs
+    const observacao_interna = req.body.observacao_interna
+    let data_inicio = null
+    
+    try {
+
+        const TicketEncontrado = await tickets.findOne({ where: { id } });
+
+        if (TicketEncontrado) {
+            // Verifica se o status é "execucao" e a data de início não foi definida
+            if (status_geral === 'execucao' && TicketEncontrado.dt_inicio_ticket === '0001-01-01') {
+                data_inicio = new Date(); // Define data de início como a data atual
+            } else {
+                // Caso contrário, mantém a data de início atual do ticket
+                data_inicio = TicketEncontrado.dt_inicio_ticket;
+            }
+        }
+
+        await tickets.update({
+            dt_previsao: previsao || '0001-01-01',
+            status_geral: status_geral,
+            responsavel: id_responsavel || 0,
+            observacao: obs,
+            observacao_interna: observacao_interna,
+            auxiliares: id_auxiliar,
+            dt_inicio_ticket: data_inicio
+
+        },
+        {where: {id:id}})
+
+        return res.json({success: true, message: 'Ticket atualizado!'})
+
+    }
+    catch{
+        return res.json({
+            success: false,
+            message: 'Erro ao atualizar Ticket'
+        })
+    }
+})
+
+app.post('/ticketPausa', verificarAutenticacao, async (req,res)=> {
+    const id = req.body.id
+    const pausa = req.body.pausa.trim()
+    const retiradapausa = req.body.retiradapausa.trim()
+
+
+    try {
+        
+        // Verificar e tratar a inserção de uma nova pausa
+        if (pausa) {
+            await ticket_pausa.create({
+                id_ticket: id,
+                motivo_pausa: pausa,
+                motivo_retirada_pausa: retiradapausa
+            });
+
+            return res.json({
+                success: true,
+                message: 'Pausa inserida'
+            });
+        } 
+
+        // Verificar e tratar a atualização de retirada de pausa
+        if (retiradapausa) {
+            // Procurar o último registro de PausaTicket
+            const PausaTicket = await ticket_pausa.findOne({
+                where: { id_ticket: id },
+                order: [['id', 'DESC']] // Ordenação pela coluna 'id' em ordem decrescente
+              });
+            if (PausaTicket) {
+                await ticket_pausa.update({
+                    motivo_retirada_pausa: retiradapausa
+                }, {
+                    where: { id: PausaTicket.id }
+                });
+
+                return res.json({
+                    success: true,
+                    message: 'Retirada de Pausa inserida'
+                });
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Pausa não encontrada para atualização'
+                });
+            }
+        }
+
+        // Se nenhuma condição for atendida
+        return res.status(400).json({
+            success: false,
+            message: 'Nenhuma ação válida realizada. Verifique os dados enviados.'
+        });
+
+    }
+    catch{
+        res.json({
+            success: false,
+            message: 'Erro ao atualizar pausa do ticket'
+        })
+    }
+
+
+})
+
+app.get('/ticket/:id', async (req,res) => {
+    const id = req.params.id
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    const offset = (page - 1) * limit
+    const idUsuario = req.session.usuarioId
+    const idGrupo = req.session.grupo
+
+    
+    try {
+
+        const ticketEncontrado = await tickets.findOne({where: {id:id}})
+        
+        const [ entidade, tipo_ticket, prioridade, pausas, usuario ] = await Promise.all([
+            entidades.findOne({where: {id:ticketEncontrado.id_entidade}}),
+            tipos_ticket.findOne({where: {id: ticketEncontrado.id_tipo}}),
+            prioridades.findOne({where: {id: ticketEncontrado.id_prioridade}}),
+            ticket_pausa.findAndCountAll({
+                where: {id_ticket: ticketEncontrado.id},
+                order: [['id','DESC']],
+                limit: limit,
+                offset: offset
+            }),
+            usuarios.findAll()
+        ])
+
+        const tipo_entidade = await tipos_entidade.findOne({where: {id: entidade.tipo_entidade}})
+
+        const totalPausas = pausas.count;
+        const totalPages = Math.ceil(totalPausas / limit);
+
+        res.render('ticket',{
+            currentPage: page,
+            totalPages: totalPages,
+            entidade: entidade,
+            tipo: tipo_ticket,
+            prioridade: prioridade,
+            ticket: ticketEncontrado,
+            tipo_entidade: tipo_entidade,
+            pausas: pausas.rows,
+            usuarios: usuario,
+            idGrupo: idGrupo,
+            idUsuario: idUsuario
+        })
+    }
+    catch {
+        return res.json({
+            success: false,
+            message: 'Erro no servidor Interno.'
+        })
+    }
+
+})
+
+app.get('/tickets', async (req, res) => {
+    try {
+        // Importando filtros da query string
+        const { prioridade, status_geral, ordenar, search, exibir, data_inicial, data_final, tipo_ticket } = req.query;
+        
+        // Pegando a página da query string, com valor padrão 1 caso não seja fornecido
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(exibir, 10) || 10;  // Convertendo `exibir` para número inteiro
+        const offset = (page - 1) * limit; // Calcula o deslocamento para a consulta
+
+        // Pegando dados do usuário e grupo (caso necessário)
+        const idUsuario = req.session.usuarioId;
+        const idGrupo = req.session.grupo;
+        
+        // Trazendo as tabelas que são usadas para os filtros
+        const [prioridadeG, tipo, entidadeG, tipoTicket] = await Promise.all([
+            prioridades.findAll(),
+            tipos_entidade.findAll(),
+            entidades.findAll(),
+            tipos_ticket.findAll()
+        ]);
+
+        
+        // Filtros dinâmicos - base para consulta
+        const whereCondition = { };
+
+            // Filtro de busca por entidades
+            if (search) { 
+                const entidadesEncontradas = await entidades.findAll({
+                    where: { cidade: { [Op.like]: `%${search}%` } } // Ajuste conforme o campo correto
+                });
+                const idsEntidades = entidadesEncontradas.map(entidade => entidade.id); // Coleta os IDs das entidades encontradas
+                
+                if (idsEntidades.length > 0) {
+                    whereCondition.id_entidade = { [Op.in]: idsEntidades }; // Usa Op.in para filtrar pelas entidades encontradas
+                } else {
+                    whereCondition.id_entidade = null; // Se nenhuma entidade for encontrada
+                }
+            }
+
+        // Filtro para "prioridade" - Aceita múltiplos valores (checkbox)
+        if (prioridade) {
+            const prioridadeSelecionados = Array.isArray(prioridade) ? prioridade : [prioridade];
+            whereCondition.id_prioridade = { [Op.in]: prioridadeSelecionados };
+        }
+
+        // Filtro para "tipo_ticket" - Aceita múltiplos valores (checkbox)
+        if (tipo_ticket) {
+            const tipoTicketSelecionados = Array.isArray(tipo_ticket) ? tipo_ticket : [tipo_ticket];
+            whereCondition.id_tipo = { [Op.in]: tipoTicketSelecionados };
+        }
+
+        // Filtro para "status_geral" - Aceita múltiplos valores (checkbox)
+        if (status_geral) {
+            const statusSelecionadas = Array.isArray(status_geral) ? status_geral : [status_geral];
+            whereCondition.status_geral = { [Op.in]: statusSelecionadas };
+        }
+ 
+        if (data_inicial) {
+            if (data_final) {
+                whereCondition.createdAt = {
+                    [Op.between]: [data_inicial, data_final]
+                };
+            } else {
+                whereCondition.createdAt = {
+                    [Op.gte]: data_inicial
+                };
+            }
+        } else if (data_final) {
+            whereCondition.createdAt = {
+                [Op.lte]: data_final
+            };
+        }
+
+        // Definindo a ordenação
+        let orderCondition = [];
+        switch (ordenar) {
+            case 'mais_recente':
+                orderCondition = [['id', 'DESC']];
+                break;
+            case 'menos_recente':
+                orderCondition = [['id', 'ASC']];
+                break;
+            case 'a_z':
+                orderCondition = [['id', 'ASC'], ['id', 'ASC']];
+                break;
+            case 'z_a':
+                orderCondition = [['id', 'DESC'], ['id', 'DESC']];
+                break;
+            default:
+                orderCondition = [['id', 'DESC']];
+                break;
+        }
+
+        // Consultando as entidades com os filtros e a paginação
+        const result = await tickets.findAndCountAll({
+            where: whereCondition,
+            order: orderCondition,
+            limit: limit,
+            offset: offset
+        });
+
+        // Calculando o total de páginas para a navegação
+        const totalTickets = result.count;
+        const totalPages = Math.ceil(totalTickets / limit);
+
+        // Renderizando a página com os dados encontrados
+        res.render('tickets', {
+            currentPage: page,
+            totalPages: totalPages,
+            tickets: result.rows,
+            entidades: entidadeG,
+            tipos: tipo,
+            prioridades: prioridadeG,
+            tipos_ticket: tipoTicket,
+            o: ordenar,
+            e: exibir,
+            dt_i: data_inicial,
+            dt_f: data_final,
+            p: prioridade,
+            st: status_geral,
+            tt: tipo_ticket
+        });
+    } catch (err) {
+        // Caso ocorra algum erro, mostrando mensagem e log
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao trazer entidades',
+            error: err.message
+        });
+    }
+});
+
 
 //CRIANDO O SERVIDOR
 app.listen(8080, ()=>{

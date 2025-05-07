@@ -84,9 +84,6 @@ header{
 .card-item:active {
     transform: scale(1.02);
 }
-
-
-
 /* Ajuste nos cards responsivos */
 .col-md-4 {
     margin-bottom: 30px;
@@ -98,8 +95,6 @@ header{
         flex: 0 0 100%;
     }
 }
-
-
   /* Garantir que a página ocupe toda a altura da tela */
   html, body {
     height: 100%;
@@ -112,8 +107,90 @@ header{
     flex-direction: column;
     min-height: 100%;
   }
-
   /* Footer fixado na parte inferior */
   .footer {
     margin-top: auto;
   }
+
+/* Estiliza o botão de seleção (que abre o dropdown) */
+.camposBuscaPesquisa + .select2-container .select2-selection {
+    background-color: #fff; /* Cor de fundo do botão */
+    padding: 3px; /* Espaçamento interno */
+    font-size: 1.25rem;; /* Tamanho da fonte */
+    display: flex;
+    border: 1px solid #ccc; /* Borda do botão */
+    border-radius: 5px; /* Borda arredondada */
+    align-items: center;
+    border-color: #ccc;
+  }
+/* Estiliza o texto selecionado dentro do campo de entrada do select2 */
+select.camposBuscaPesquisa + .select2-container .select2-selection__rendered {
+    color: #495057 !important; /* Cor do texto */
+    margin-left: 5px;
+  }
+/* Estilos gerais */
+.ticket-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+/* Estilo para o cabeçalho do ticket */
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.ticket-id {
+    font-size: 18px;
+    color: #007bff;
+}
+
+.ticket-status {
+    padding: 4px 8px;
+    border-radius: 5px;
+    color: white;
+}
+
+
+/* Estilo para os detalhes do ticket */
+.ticket-details {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+}
+
+.ticket-prioridade, .ticket-tipo {
+    background-color: #f1f1f1;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.ticket-card {
+    cursor: pointer;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem; /* Ajuste o padding */
+    font-size: 0.75rem; /* Tamanho da fonte */
+    line-height: 1.5; /* Altura da linha */
+    border-radius: 0.2rem; /* Raio da borda */
+}
+.btn-laranja {
+    background-color: #ff7f00; /* Cor laranja */
+    color: white; /* Cor do texto */
+    margin-left: 5px;
+}
+
+.btn-laranja:hover {
+    background-color: #e66a00; /* Tom mais escuro ao passar o mouse */
+    color: white;
+}

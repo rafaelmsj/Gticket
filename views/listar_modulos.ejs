@@ -48,7 +48,7 @@
                     </div>
                     
                         <!-- Filtros (Instalação, Ordenar por) -->
-                            <div class="justify-content-center mt-4" id="DivFiltros" style="display: none;">
+                            <div class="ml-4 mt-4" id="DivFiltros" style="display: none;">
 
                                 <!-- Ordenar por -->
                                 <div class="ml-3">
@@ -94,7 +94,7 @@
                               </div>
                             </div>
                             <div style="display: none;" id="botoes-<%=modulo.id%>" class="mt-2">
-                              <form action="/deletar_modulos" method="post" class="flex">
+                              <form action="/deletar_modulos" id="formDelete" method="post" class="flex">
                                 <% if(infoGrupo.alterar === 1){%>
                                       <a href="/alterar_modulos/<%=modulo.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
                                         <i class="fas fa-edit"></i> Alterar

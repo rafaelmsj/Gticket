@@ -19,7 +19,7 @@ const entidades = connection.define('entidades', {
         allowNull: false
     },
     modulos_contratados:{
-        type: sequelize.STRING,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     versao_sistema: {

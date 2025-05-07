@@ -1,0 +1,245 @@
+<%- include('partials/headPublic.ejs') %>
+
+<%
+    function capitalizeFirstLetterOfWords(str) {
+        return str
+            .split(' ') // Divide a string em palavras
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Converte a primeira letra em maiúscula
+            .join(' '); // Junta as palavras de volta em uma string
+    }
+%>
+
+<body>
+    <div class="wrapper">
+        <div class="container-fluid mt-4">
+
+            <!-- Linha com os filtros e conteúdo -->
+            <div class="row">
+
+                
+                    <div class="d-flex w-100 d-md-none ml-2 mr-2">
+                        <!-- Botão de Toggler para telas pequenas -->
+                        <button class="btn btn-outline-primary d-flex justify-content-between mr-1" type="button" data-toggle="collapse" data-target="#filtrosCollapse" aria-expanded="false" aria-controls="filtrosCollapse">
+                            <span><i class="fas fa-filter"></i> Filtros</span> 
+                            
+                        </button>
+                        <form action="">
+                            <div class="input-group">
+                                <input class="form-control rounded-pill" type="search" name="search" id="">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn custom-btn">
+                                        <i class="fas fa-search custom-icon"></i> <!-- Ícone de lupa maior -->
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Filtro à esquerda (mais fino) -->
+                    <div class="col-md-2">
+
+                        <form action="/usuarios" method="GET">  
+                            <!-- Filtros que vão ficar ocultos em telas pequenas -->
+                            <div class="filtros-lateral collapse d-md-block mb-2 mt-3" id="filtrosCollapse">
+                                <div class="TituloFiltros mb-3">Filtros</div>
+                                
+                                <details class="DetalhesFiltro mb-3" open>
+                                    <summary class="TituloDetalhes">Tickets em aberto</summary>
+                                    <div class="OpcaoFiltro ml-3">
+                                        <input type="radio" name="ticket" value="1" <%if(t == 1){%> checked <%}%>>
+                                        <label for="sim">Sim</label>
+                                    </div>
+                                    <div class="OpcaoFiltro ml-3">
+                                        <input type="radio" name="ticket" value="0" <%if(t == 0){%> checked <%}%>>
+                                        <label for="nao">Não</label>
+                                    </div>
+                                    <div class="OpcaoFiltro ml-3">
+                                        <input type="radio" name="ticket" value="" <%if(t == '' || t == undefined){%> checked <%}%>>
+                                        <label for="nao">Todos</label>
+                                    </div>
+                                </details>
+                        
+                                <details class="DetalhesFiltro mb-3" open>
+                                    <summary class="TituloDetalhes">Setor</summary>
+                                    <% setores.forEach((setor) => {%>
+                                        <div class="OpcaoFiltro ml-3">
+                                            <input type="checkbox" 
+                                                id="<%=setor.setor%>" 
+                                                name="setor" value="<%=setor.id%>"
+                                                <% if (se && se.includes(setor.id.toString())) { %> checked <% } %>>
+                                            <label for="<%=setor.setor%>"><%=capitalizeFirstLetterOfWords(setor.setor)%></label>
+                                        </div>
+                                    <%})%>
+                                    <div class="OpcaoFiltro ml-3">
+                                        <input type="checkbox" id="todos" name="setor" value="" <%if(se == '' || se == undefined){%>checked<%}%>>
+                                        <label for="setor">Todos</label>
+                                    </div>
+                                </details>
+                                
+                                <details class="DetalhesFiltro mb-3" open>
+                                    <summary class="TituloDetalhes">Data de criação</summary>
+                                    <div class="d-flex flex-wrap align-items-center ml-3 mb-3">
+                                        <div class="d-flex align-items-center mr-4 mb-2">
+                                            <label for="data_inicial" class="mr-2 mb-0">De:</label>
+                                            <input class="form-control" 
+                                                type="date" 
+                                                name="data_inicial" 
+                                                id="data_inicia"
+                                                <%if (dt_i != undefined && dt_i != ''){%> value="<%=dt_i%>" <%}%>>
+                                        </div>
+                                        <div class="d-flex align-items-center mr-4 mb-3">
+                                            <label for="data_final" class="mr-2 mb-0">Até:</label>
+                                            <input class="form-control" 
+                                                type="date" 
+                                                name="data_final" 
+                                                id="data_final"
+                                                <%if (dt_f != undefined && dt_f != ''){%> value="<%=dt_f%>" <%}%>>
+                                        </div>
+                                    </div>
+                                </details>
+                                
+                        
+                                <!-- Botão de Filtrar -->
+                                <button id="BtnAplicaFiltro" class="btn btn-primary btn-sm btn-block">Filtrar</button>
+                                <a class="SemLink" href="/usuarios"><div id="BtnLimpaFiltros" class="btn btn-secondary btn-sm btn-block mt-1">Limpar Filtros</div></a>
+                            </div>
+                        </form>
+                    </div>
+                
+
+                <!-- Conteúdo das Entidades à direita -->
+                <div class="col-md-9">
+                    <form action="/usuarios" method="GET">
+                    <!-- Filtro centralizado (já existente) -->
+                        <div class="filtros d-flex align-items-center mb-4">
+                            <div class="ordenar align-items-center mr-4 w-auto d-md-flex"> <!-- Esconde em telas menores -->
+                                <span class="mr-2 TituloFiltros">Ordenar:</span>
+                                <select class="form-control form-control SelectOrdenacao" name="ordenar" onchange="this.form.submit()">
+                                    <option value="mais_recente" <% if (o === 'mais_recente') { %>selected<% } %>>Mais recente</option>
+                                    <option value="menos_recente" <% if (o === 'menos_recente') { %>selected<% } %>>Menos recente</option>
+                                    <option value="a_z" <% if (o === 'a_z') { %>selected<% } %>>A-Z</option>
+                                    <option value="z_a" <% if (o === 'z_a') { %>selected<% } %>>Z-A</option>
+                                </select>
+                            </div>
+                        
+                            <div class="quantidade align-items-center mr-4 w-auto d-md-flex"> <!-- Esconde em telas menores -->
+                                <span class="mr-2 TituloFiltros">Exibir:</span>
+                                <select class="form-control form-control w-auto SelectOrdenacao" name="exibir" onchange="this.form.submit()">
+                                    <option value="10" <% if (e == '10') { %>selected<% } %>>10</option>
+                                    <option value="20" <% if (e == '20') { %>selected<% } %>>20</option>
+                                    <option value="40" <% if (e == '40') { %>selected<% } %>>40</option>
+                                </select>
+                            </div>
+                        </form>
+
+                        <div class="d-block align-items-center">
+                            <form id="formulariofiltro" action="/usuarios" method="GET">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control rounded-pill" placeholder="Pesquisar..." aria-label="Pesquisar">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn custom-btn">
+                                            <i class="fas fa-search custom-icon"></i> <!-- Ícone de lupa maior -->
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Entidades -->
+                    <div class="cabecalhoLista row mb-3 ml-1 mr-1">
+                        <div class="fa fa-list lista"></div>
+                        <div class="ml-2 titulo-entidades">Usuários</div>
+                    </div>
+
+                    <% usuarios.forEach((usuario) => { %>
+
+                            <div class="ticket-card mb-3 ml-3 mr-3">
+                                <a class="SemLink" href="/usuario/<%=usuario.id%>">
+                                    <div class="ticket-header d-flex justify-content-between align-items-center">
+
+                                        <span class="ticket-id">
+                                        <%=usuario.nome.toUpperCase()%>
+                                        </span>
+                                        <span class="ticket-date text-muted">
+                                            <%= new Date(usuario.createdAt).toLocaleString('pt-BR', { 
+                                                day: '2-digit', 
+                                                month: '2-digit', 
+                                                year: 'numeric'
+                                            })%>
+                                        </span>
+                                    </div>
+
+                                    <div class="ticket-details mt-2">
+                                        <% 
+                                            var setorOk = ''
+                                            var setor = setores.find(setor => setor.id === usuario.setor)
+                                            if(setor){
+                                                setorOk = setor.setor.toUpperCase()
+                                            }
+                                        %>
+                                        <span class="ticket-prioridade d-block">Setor: <%=setorOk %></span>
+
+                                    </div>
+
+                                    <%
+                                    var ticketOk = 'Não';  // Por padrão, consideramos que o ticket não foi encontrado.
+                                    var ticket = tickets.find(ticket => ticket.responsavel === usuario.id);
+                                  
+                                    if(ticket && ticket.status_geral != 'finalizado'){
+                                      // Se o ticket for encontrado com o responsável sendo o usuário e não finalizado, definimos como 'Sim'
+                                      ticketOk = 'Sim';
+                                    } else {
+                                      // Caso o ticket não seja encontrado como responsável, verificamos os auxiliares
+                                      for (let i = 0; i < tickets.length; i++) {
+                                        const ticketAuxiliar = tickets[i];
+                                        const idsArray = ticketAuxiliar.auxiliares.split(',');
+                                  
+                                        // Verificamos se o usuário está na lista de auxiliares e se o ticket não está finalizado
+                                        if (idsArray.includes(usuario.id.toString()) && ticketAuxiliar.status_geral != 'finalizado') {
+                                          ticketOk = 'Sim';
+                                          break;  // Encontramos, podemos sair do loop
+                                        }
+                                      }
+                                    }
+                                  %>
+                                  
+                                  
+
+                                    <div class="ticket-details mt-2">
+                                        <span class="ticket-assunto d-block text-uppercase"><strong>Tickets em aberto:</strong> <%=ticketOk%></span>
+                                    </div>
+
+                                </a>
+                            </div>
+                    <% }); %>
+
+                    <% if(totalPages > 0){%>
+                        <div class="d-flex justify-content-center">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                        <a class="page-link" href="?page=<%= currentPage - 1 %>">Anterior</a>
+                                    </li>
+
+                                    <% for (let i = 1; i <= totalPages; i++) { %>
+                                        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                            <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                        </li>
+                                    <% } %>
+
+                                    <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                        <a class="page-link" href="?page=<%= currentPage + 1 %>">Próximo</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    <% } %>
+                </div>
+            </div> <!-- End Row -->
+        </div>
+        <br>
+    </div>
+</body>
+
+<%- include('partials/footerPublic.ejs')%>

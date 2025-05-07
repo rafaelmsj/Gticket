@@ -3,7 +3,7 @@ const connection = require('./db');
 
 const tipos_entidade = connection.define('tipos_entidade', {
     tipo_entidade: {
-        type: sequelize.STRING,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     ativo: {

@@ -22,14 +22,14 @@
                         <br>
                         <!--ESTADO-->
                         <label for="estado"><strong>Estado</strong></label>
-                        <select name="estado" id="estado" class="form-control form-control-lg inputs">
+                        <select name="estado" id="estado" class="form-control form-control-lg camposBuscaPesquisa inputs ">
                             <option value="">Selecione um estado</option>
                         </select>
                         <br>
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                         <!--CIDADE-->
                         <label for="cidade"><strong>Cidade</strong></label>
-                        <select name="cidade" id="cidade" disabled class="form-control form-control-lg inputs">
+                        <select name="cidade" id="cidade" disabled class="form-control form-control-lg inputs camposBuscaPesquisa">
                             <option value="">Selecione uma cidade</option>
                         </select>
                         <br>
@@ -39,7 +39,7 @@
                             <!--TIPO DE ENTIDADE-->
                             <div class="col">
                                 <label for="tipo_entidade" ><strong>Tipo de entidade</strong></label>
-                                <select name="tipo_entidade" class="form-control form-control-lg inputs">
+                                <select name="tipo_entidade" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                     <option value="">Selecione o tipo</option>
                                     <% tipos_entidade.forEach((tipo_entidade) => { %>
             
@@ -55,7 +55,7 @@
                             <!--VERSAO DO SISTEMA-->
                             <div class="col">
                                 <label for="versao_sistema" class="form-label"><strong>Versão do Sistema</strong></label>
-                                <select name="versao_sistema" class="form-control form-control-lg inputs">
+                                <select name="versao_sistema" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                     <option value="">Selecione</option>
                                     <% versao_sistema.forEach((versao) => { %>
                                         
@@ -96,7 +96,7 @@
                             <div class="row g-3 align-items-end"> 
                                 <div class="col-md-6">
                                     <label for="website_concorrente" class="form-label"><strong>Website Concorrente</strong></label>
-                                    <select name="website_concorrente" class="form-control form-control-lg inputs">
+                                    <select name="website_concorrente" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                         <option value="">Selecione</option>
                                         <% concorrentes.forEach((concorrente) => { %>
     
@@ -112,7 +112,7 @@
                                 <!--SISTEMA CONCORRENTE-->
                                 <div class="col-md-6">
                                     <label for="sistema_concorrente" class="form-label"><strong>Sistema Concorrente</strong></label>
-                                    <select name="sistema_concorrente" class="form-control form-control-lg inputs">
+                                    <select name="sistema_concorrente" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                         <option value="">Selecione</option>
                                         <% concorrentes.forEach((concorrente) => { %>
     

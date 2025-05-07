@@ -46,7 +46,7 @@
               </div>
               
                   <!-- Filtros (Instalação, Ordenar por) -->
-                      <div class="justify-content-center mt-4" id="DivFiltros" style="display: none;">
+                      <div class="ml-4 mt-4" id="DivFiltros" style="display: none;">
 
                           <!-- Ordenar por -->
                           <div class="ml-3">
@@ -78,64 +78,74 @@
 
                 <div class="container">
                     <% usuarios.forEach((usuario) => { %>
-                      <div class="border-bottom py-2">
-                        <div class="row">
-                          <div class="col-12"><strong>Nome:</strong> <%= usuario.nome %></div>
+                      <div class="ticket-card mb-3" onclick="carregaBtns('<%=usuario.id%>')">
+                        <div class="ticket-header d-flex justify-content-between align-items-center">
+                            <span class="ticket-id">
+                                <%=usuario.nome.toUpperCase()%>
+                            </span>
+                            <span class="ticket-date text-muted">
+                                <%= new Date(usuario.createdAt).toLocaleString('pt-BR', { 
+                                    day: '2-digit', 
+                                    month: '2-digit', 
+                                    year: 'numeric'
+                                })%>
+                            </span>
+                        </div>
+
+                        
+                        <div class="ticket-details mt-2">
+                            <span class="ticket-prioridade d-block">Usuário: <%=usuario.usuario%></span>
+
+                            <%
+                                var grupoOK = ''
+                                var grupo = grupos.find(grupo => grupo.id === usuario.grupo)
+                                if(grupo){
+                                  grupoOK = grupo.grupo
+                                }
+                            %>
+                            <span class="ticket-tipo d-block">Grupo: <%= grupoOK.toUpperCase() %></span>
                         </div>
                         
-                        <div class="row align-items-center">
-
-                          <div class="col-12 col-md"><strong>Usuário:</strong> <%= usuario.usuario %></div>  
-
-                          <% let group = ''; %>
-                          <% grupos.forEach((grupo) => { %>
-                            <% if (usuario.grupo == grupo.id) { %>
-                              <% group = grupo.grupo; %>
-                            <% } %>
-                          <% }); %>
-                          <div class="col-12 col-md"><strong>Grupo:</strong> <%= group %></div>
-                          <% let sector = ''; %>
-                          <% setores.forEach((setor) => { %>
-                            <% if (usuario.setor === setor.id) { %>
-                              <% sector = setor.setor; %>
-                            <% } %>
-                          <% }); %>
-                          <div class="col-12 col-md"><strong>Setor:</strong> <%= sector %></div>
-                          
-                          
-                          <div class="col-auto ms-auto">
-                            <% if(infoGrupo.deletar === 1 || infoGrupo.alterar === 1){ %>
-                              <button class="btn btn-info btn-sm rounded-pill" onclick="carregaBtns('<%=usuario.id%>')" id="botaomais">
-                                <i class="fas fa-plus"></i>
-                              </button>
-                            <% } %>
-                          </div>
+                        <div class="ticket-details mt-2">
+                            <% 
+                              var setorOk = ''
+                              var setor = setores.find(setor => setor.id == usuario.setor)  
+                              if(setor){
+                                setorOk = setor.setor
+                              }
+                            %>
+                            <span class="ticket-assunto d-block text-uppercase"><strong>Setor:</strong> <%=setorOk%></span>
                         </div>
-                  
+
                         <div style="display: none;" id="botoes-<%=usuario.id%>" class="mt-2">
-                          <form action="/deletar_usuario" method="post" class="flex">
-                            <% if(infoGrupo.alterar === 1){%>
-                              <a href="/alterar_usuarios/<%=usuario.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
-                                <i class="fas fa-edit"></i> Alterar
-                              </div></a>
-                            <% } else { %>
-                              <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
-                            <% } %>
-                  
-                            <% if(infoGrupo.deletar === 1){%>
-                              <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=usuario.id%>')">
-                                <i class="fas fa-trash-alt"></i> Deletar
-                              </div>
-                            <% } else { %>
+                            <form action="/deletar_usuarios" method="post" class="flex" id="formDelete">
+                                <% if(infoGrupo.alterar === 1){%>
+                                    <a href="/alterar_usuarios/<%=usuario.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
+                                        <i class="fas fa-edit"></i> Alterar
+                                    </div></a>
+                                <%}else {%>
+                                    <div style="display: none;" class="btn btn-warning btn-sm botao_alterar">Alterar</div>
+                                <%}%>
+
+                            	<% if(infoGrupo.deletar === 1){%>
+	                              <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=usuario.id%>')">
+	                                <i class="fas fa-trash-alt"></i> Deletar
+	                              </div>
+	                            <% } else { %>
                               <div style="display: none;" class="btn btn-danger btn-sm botao_deletar">Deletar</div>
                             <% } %>
+
+                                <a target="_blank" href="/usuario/<%=usuario.id%>"><div style="display: inline-block;" class="btn btn-dark btn-sm botao_visualizar">
+                                    <i class="fas fa-eye"></i> Visualizar
+                                 </div></a>
+    
+                                <input style="display: none;" type="hidden" name="id" value="<%=usuario.id%>"></input>
+                            </form> 
                             
-                            <input style="display: none;" type="hidden" name="id" value="<%=usuario.id%>">
-                          </form>
                         </div>
                       </div>
                     <% }); %>
-                  </div>
+                </div>
                   
             
 

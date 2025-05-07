@@ -4,11 +4,11 @@ const connection = require('./db');
 const usuarios = connection.define('usuarios',{
 
     nome:{
-        type: sequelize.TEXT,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     usuario:{
-        type: sequelize.TEXT,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     setor: {

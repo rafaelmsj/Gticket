@@ -4,11 +4,11 @@ const connection = require('./db')
 var setores = connection.define('setores',{
 
     setor: {
-        type: sequelize.TEXT,
+        type: sequelize.STRING(50),
         allowNull: false 
     },
     sigla: {
-        type: sequelize.TEXT,
+        type: sequelize.STRING(5),
         allowNull: false
     },
     ativo:{

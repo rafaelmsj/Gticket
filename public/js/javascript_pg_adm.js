@@ -1,4 +1,3 @@
-
 //CK EDITOR
 ClassicEditor
 .create(document.querySelector('#observacao'))
@@ -7,6 +6,27 @@ ClassicEditor
 })
 .catch(error => {
     console.error(error);
+});
+
+$(document).ready(function() {
+    // Inicializar Select2 para todos os selects com a classe 'camposBuscaPesquisa'
+    $('.camposBuscaPesquisa').select2({
+        allowClear: false
+    });
+
+    // Atualizar Select2 após carregamento dos estados
+    carregarEstados().then(() => {
+        $("#estado").select2();
+    });
+
+    // Atualizar Select2 após carregamento das cidades
+    $("#estado").on("change", function() {
+        const estadoSigla = this.value;
+        $("#cidade").html('<option value="">Carregando...</option>').prop("disabled", true);
+        carregarCidades(estadoSigla).then(() => {
+            $("#cidade").select2();
+        });
+    });
 });
 //COLOCA CHECKED NOS CHECKBOX CONFORME O VALOR
 function updateCheckboxValue(checkbox) {
@@ -34,38 +54,24 @@ function updateCheckboxValue(checkbox) {
     async function carregarCidades(estadoSigla) {
         if (!estadoSigla) return;
         
-        // Buscar o estado pelo nome para obter o ID necessário para a API
         const responseEstados = await fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados");
         const estados = await responseEstados.json();
         const estado = estados.find(e => e.sigla === estadoSigla);
-
+    
         if (!estado) return;
-
+    
         const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado.id}/municipios`);
         const cidades = await response.json();
-        const selectCidade = document.getElementById("cidade");
-
-        selectCidade.innerHTML = '<option value="">Selecione uma cidade</option>';
+        const selectCidade = $("#cidade"); // Usando jQuery para Select2
+    
+        selectCidade.html('<option value="">Selecione uma cidade</option>');
         cidades.forEach(cidade => {
-            const option = document.createElement("option");
-            option.value = cidade.nome; // Define o nome como valor
-            option.textContent = cidade.nome;
-            selectCidade.appendChild(option);
+            selectCidade.append(new Option(cidade.nome, cidade.nome));
         });
-
-        selectCidade.disabled = false;
+    
+        selectCidade.prop("disabled", false); // Habilitar o select
+        selectCidade.trigger("change"); // Atualizar Select2
     }
-
-    document.getElementById("estado").addEventListener("change", function () {
-        const estadoSigla = this.value;
-        document.getElementById("cidade").innerHTML = '<option value="">Carregando...</option>';
-        document.getElementById("cidade").disabled = true;
-        carregarCidades(estadoSigla);
-    });
-
-    carregarEstados();
-
-
 
 //FUNCOES RELACIONADAS A LOGIN
     //funcao para alterar senha do usuario
@@ -246,9 +252,20 @@ function updateCheckboxValue(checkbox) {
 
         for(let i = 0; i < inputs.length; i++){
             msg_erro[i].style.display = 'none';
-            if(inputs[i].value == ''){
-                msg_erro[i].style.display = 'block';
-                valido = false
+            
+            // Verifique se o campo é um Select2 (usando .select2() no jQuery)
+            if ($(inputs[i]).hasClass('camposBuscaPesquisa')) {
+                // Para Select2, verificar o valor do campo select
+                if ($(inputs[i]).val() === null || $(inputs[i]).val() === "") {
+                    msg_erro[i].style.display = 'block';
+                    valido = false;
+                }
+            } else {
+                // Para os outros campos, verifique o valor normalmente
+                if (inputs[i].value === '') {
+                    msg_erro[i].style.display = 'block';
+                    valido = false;
+                }
             }
         }
 
@@ -1313,6 +1330,496 @@ function updateCheckboxValue(checkbox) {
 
     }
 
+    function cadastrarPrioridade(){
+        var prioridade = document.getElementsByName('prioridade')[0].value
+        var inputs = document.querySelectorAll('.inputs')
+        var msg_erro = document.querySelectorAll('.msg_erro')
+        var alerta = document.getElementById('alertaerro')
+        var valido = true
+
+        for(let i = 0; i < inputs.length; i++){
+            msg_erro[i].style.display = 'none';
+            if(inputs[i].value == ''){
+                msg_erro[i].style.display = 'block';
+                valido = false
+            }
+        }
+
+        if(valido){
+
+            fetch('/salvar_prioridade',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prioridade: prioridade
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert','alert-danger');
+                    alerta.classList.add('alert', 'alert-success')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-success');
+                        alerta.style.display = 'none';
+                        window.location.href = '/listar_prioridades'
+                    },1000);
+                }
+                else {
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert', 'alert-success')
+                    alerta.classList.add('alert','alert-danger')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-danger');
+                        alerta.style.display = 'none';
+                        
+                    },2000)
+                }
+            })
+
+        }
+
+    }
+
+    function updatePrioridade(){
+        var prioridade = document.getElementsByName('prioridade')[0].value
+        var id = document.getElementsByName('id')[0].value
+        var inputs = document.querySelectorAll('.inputs')
+        var msg_erro = document.querySelectorAll('.msg_erro')
+        var alerta = document.getElementById('alertaerro')
+        var valido = true
+
+        for(let i = 0; i < inputs.length; i++){
+            msg_erro[i].style.display = 'none';
+            if(inputs[i].value == ''){
+                msg_erro[i].style.display = 'block';
+                valido = false
+            }
+        }
+
+        if(valido){
+
+            fetch('/update_prioridade', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    prioridade: prioridade,
+                    id: id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert','alert-danger');
+                    alerta.classList.add('alert', 'alert-success')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-success');
+                        alerta.style.display = 'none';
+                        window.location.href = '/listar_prioridades'
+                    },1000);
+                }
+                else {
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert', 'alert-success')
+                    alerta.classList.add('alert','alert-danger')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-danger');
+                        alerta.style.display = 'none';
+                        
+                    },2000)
+                }
+            })
+
+        }
+    }
+
+    function cadastrarTipodeTicket(){
+        var tipo_ticket = document.getElementsByName('tipo_ticket')[0].value
+        var inputs = document.querySelectorAll('.inputs')
+        var msg_erro = document.querySelectorAll('.msg_erro')
+        var alerta = document.getElementById('alertaerro')
+        var valido = true
+
+        for(let i = 0; i < inputs.length; i++){
+            msg_erro[i].style.display = 'none';
+            if(inputs[i].value == ''){
+                msg_erro[i].style.display = 'block';
+                valido = false
+            }
+        }
+
+        if(valido){
+
+            fetch('/salvar_tipos_ticket',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tipo_ticket: tipo_ticket
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert','alert-danger');
+                    alerta.classList.add('alert', 'alert-success')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-success');
+                        alerta.style.display = 'none';
+                        window.location.href = '/listar_tipos_ticket'
+                    },1000);
+                }
+                else {
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert', 'alert-success')
+                    alerta.classList.add('alert','alert-danger')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-danger');
+                        alerta.style.display = 'none';
+                        
+                    },2000)
+                }
+            })
+
+        }
+
+    }
+
+    function updateTipodeTicket(){
+        var tipo_ticket = document.getElementsByName('tipo_ticket')[0].value
+        var id = document.getElementsByName('id')[0].value
+        var inputs = document.querySelectorAll('.inputs')
+        var msg_erro = document.querySelectorAll('.msg_erro')
+        var alerta = document.getElementById('alertaerro')
+        var valido = true
+
+        for(let i = 0; i < inputs.length; i++){
+            msg_erro[i].style.display = 'none';
+            if(inputs[i].value == ''){
+                msg_erro[i].style.display = 'block';
+                valido = false
+            }
+        }
+
+        if(valido){
+
+            fetch('/update_tipos_ticket', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tipo_ticket: tipo_ticket,
+                    id: id
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert','alert-danger');
+                    alerta.classList.add('alert', 'alert-success')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-success');
+                        alerta.style.display = 'none';
+                        window.location.href = '/listar_tipos_ticket'
+                    },1000);
+                }
+                else {
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert', 'alert-success')
+                    alerta.classList.add('alert','alert-danger')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-danger');
+                        alerta.style.display = 'none';
+                        
+                    },2000)
+                }
+            })
+
+        }
+    }
+
+    function cadastrarTicket(){
+        var id_prioridade = document.getElementsByName('id_prioridade')[0].value
+        var id_tipo = document.getElementsByName('id_tipo')[0].value
+        var assunto = document.getElementsByName('assunto')[0].value
+        var id_entidade = document.getElementsByName('id_entidade')[0].value
+        var descricao = document.getElementsByName('descricao')[0].value
+        var inputs = document.querySelectorAll('.inputs')
+        var msg_erro = document.querySelectorAll('.msg_erro')
+        var alerta = document.getElementById('alertaerro')
+        var valido = true
+
+        for(let i = 0; i < inputs.length; i++){
+            msg_erro[i].style.display = 'none';
+            if(inputs[i].value == ''){
+                msg_erro[i].style.display = 'block';
+                valido = false
+            }
+        }
+
+        if(valido){
+
+            fetch('/salvar_ticket',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_tipo: id_tipo,
+                    assunto: assunto,
+                    id_prioridade: id_prioridade,
+                    id_entidade: id_entidade,
+                    descricao: descricao
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert','alert-danger');
+                    alerta.classList.add('alert', 'alert-success')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-success');
+                        alerta.style.display = 'none';
+                        window.location.href = '/listar_tickets'
+                    },1000);
+                }
+                else {
+                    alerta.style.display = 'none'
+                    alerta.classList.remove('alert', 'alert-success')
+                    alerta.classList.add('alert','alert-danger')
+                    alerta.style.display = 'block';
+                    alerta.innerHTML = data.message
+                    alerta.focus()
+
+                    setTimeout(function(){
+                        alerta.classList.remove('alert','alert-danger');
+                        alerta.style.display = 'none';
+                        
+                    },2000)
+                }
+            })
+
+        }
+
+    }
+
+    function updateTicket(){
+        var previsao = document.getElementsByName('previsao')[0].value
+        var status_geral = document.getElementsByName('status_geral')[0].value
+        var status_atual = document.getElementsByName('status_atual')[0].value
+        var id_responsavel = document.getElementsByName('id_responsavel')[0].value
+        var obs = document.getElementsByName('obs')[0].value
+        var observacao_interna = editor.getData();
+        var id = document.getElementsByName('id')[0].value
+        var alerta = document.getElementById('alertaerro')
+
+        const idAuxiliarSelect = document.getElementById('id_auxiliar')
+        // Cria um array com os valores das opções selecionadas
+        const idAuxiliarSelecionados = Array.from(idAuxiliarSelect.selectedOptions)
+        .map(option => option.value)
+        .join(','); // Usando vírgula como separador
+        
+         
+        fetch('/update_ticket',{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                previsao: previsao,
+                status_geral: status_geral,
+                id_responsavel: id_responsavel,
+                id_auxiliar: idAuxiliarSelecionados,
+                obs: obs,
+                observacao_interna: observacao_interna,
+                id: id
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success){
+                alerta.style.display = 'none'
+                alerta.classList.remove('alert','alert-danger');
+                alerta.classList.add('alert', 'alert-success')
+                alerta.style.display = 'block';
+                alerta.innerHTML = data.message
+                alerta.focus()
+
+                setTimeout(function(){
+                    alerta.classList.remove('alert','alert-success');
+                    alerta.style.display = 'none';
+                    window.location.href = '/listar_tickets'
+                },1000);
+            }
+            else {
+                alerta.style.display = 'none'
+                alerta.classList.remove('alert', 'alert-success')
+                alerta.classList.add('alert','alert-danger')
+                alerta.style.display = 'block';
+                alerta.innerHTML = data.message
+                alerta.focus()
+
+                setTimeout(function(){
+                    alerta.classList.remove('alert','alert-danger');
+                    alerta.style.display = 'none';
+                    
+                },2000)
+            }
+        })
+    }
+
+    function PausaTicket(){
+        verificarStatusComModal()
+    }
+
+    // Função que retorna uma Promise e aguarda o usuário interagir com o modal
+function esperarMotivoModal() {
+    return new Promise((resolve) => {
+        // Configura o fechamento do modal para resolver a promise
+        $('#ModalPausa').on('hide.bs.modal', function () {
+            resolve(null); // Se o modal for fechado, retorna null
+        });
+
+        var botaoConfirmar = document.getElementById("botaoConfirmar");
+        botaoConfirmar.addEventListener('click', function() {
+            var msg_erro = document.getElementById('msg_erro')
+            msg_erro.style.display = 'none'
+            msg_erro.textContent = ''
+            var pausa = document.getElementById("pausa").value;
+            var retiradapausa = document.getElementById("retiradapausa").value;
+
+            var motivo = pausa || retiradapausa
+            if (motivo.trim() == ''){
+                msg_erro.style.display = 'block'
+                msg_erro.textContent = '*Campo Obrigatório'
+            }
+            else if (motivo.trim().length < 5){
+                msg_erro.style.display = 'block'
+                msg_erro.textContent = 'Digite um motivo válido'
+            }
+            else {
+                resolve(motivo); 
+                $('#ModalPausa').modal('hide');
+            }
+            
+        });
+    });
+}
+
+async function verificarStatusComModal() {
+    var status_geral = document.getElementsByName('status_geral')[0].value
+    var status_atual = document.getElementsByName('status_atual')[0].value
+    var id = document.getElementsByName('id')[0].value
+    if (status_atual != 'pausado' && status_geral == 'pausado') {
+        var MotivoPausa = document.getElementById("MotivoPausa");
+        $('#ModalPausa').modal('show');
+        MotivoPausa.style.display = 'block';
+
+        // Aguarda a interação do usuário no modal
+        var motivo = await esperarMotivoModal();
+        
+        if (motivo){
+            fetch('/ticketPausa',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    pausa: motivo,
+                    retiradapausa: ''
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    updateTicket()
+                }
+            })
+        }
+    }
+    else if (status_atual == 'pausado' && status_geral != 'pausado'){
+        var MotivoRetiradaPausa = document.getElementById("MotivoRetiradaPausa");
+        $('#ModalPausa').modal('show');
+        MotivoRetiradaPausa.style.display = 'block';
+
+        // Aguarda a interação do usuário no modal
+        var motivo = await esperarMotivoModal();
+        
+        if (motivo){
+            fetch('/ticketPausa',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    pausa: '',
+                    retiradapausa: motivo
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success){
+                    updateTicket()
+                }
+            })
+        }
+    }
+    else {
+        updateTicket()
+    }
+}
+
+
+
 
 
 //FUNCOES DE PERMISSAO, SO ACESSA PAGINA SE O USUARIO TIVER PERMISSAO
@@ -1410,7 +1917,7 @@ function updateCheckboxValue(checkbox) {
 
     //faz confirmação se o usuario realmente quer deletar o registro
     function deletar(id){
-        var form = document.querySelector("form"); // Seleciona o formulário
+        var form = document.getElementById("formDelete"); // Seleciona o formulário
         var formid = document.getElementsByName('id')[0]
         
         // Exibe um alerta com 2 botões: OK e Cancelar
@@ -1427,7 +1934,6 @@ function updateCheckboxValue(checkbox) {
             console.log('Elemento encontrado:', check);  // Verifica se os elementos estão sendo encontrados
             check.addEventListener('click', function(){
                 console.log(check.value);  // Verifica se o valor está sendo capturado corretamente
-                alert(check.value);
             });
         });
     });

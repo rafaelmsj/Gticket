@@ -7,7 +7,7 @@ const log = connection.define('log',{
         allowNull: false
     },
     acao: {
-        type: sequelize.STRING,
+        type: sequelize.STRING(50),
         allowNull: false  
     },
     tabela: {

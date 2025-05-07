@@ -1,6 +1,6 @@
 const sequelize = require('sequelize');
 
-const connection = new sequelize('import_tickets','root','showmypc',{
+const connection = new sequelize('gticket','root','showmypc',{
     host: 'localhost',
     dialect: 'mysql'
 });

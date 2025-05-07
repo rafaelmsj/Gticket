@@ -23,24 +23,23 @@
 
     
                         <label for="setor"><strong>Setor:</strong></label>
-                        <select class="form-control form-control-lg inputs" name="setor">
+                        <select class="form-control form-control-lg inputs camposBuscaPesquisa" name="setor">
                             <option value="" disabled selected="true">Selecione o Setor</option>
                             <% setores.forEach((setor) => { %>
                                 <option value="<%= setor.id %>"><%= setor.setor %></option>
                             <%})%>
                         </select>
-                        <br>
-                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
-    
+                        <div class="msg_erro mt-1" style="display: none;">*Campo Obrigatório</div>
+                        
+                        
                         <label for="grupo"><strong>Grupo:</strong></label>
-                        <select class="form-control form-control-lg inputs" name="grupo" id="">
-                            <option value="" disabled selected>Selecione o Grupo</option>
+                        <select class="form-control form-control-lg inputs camposBuscaPesquisa" name="grupo" id="">
+                            <option value="null" disabled selected>Selecione o Grupo</option>
                             <% grupos.forEach((grupo) => { %>
                                 <option value="<%= grupo.id %>"><%= grupo.grupo %></option>
                             <%})%>
                         </select>
-                        <br>
-                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <div class="msg_erro mt-1" style="display: none;">*Campo Obrigatório</div>
 
                         <hr>
                             

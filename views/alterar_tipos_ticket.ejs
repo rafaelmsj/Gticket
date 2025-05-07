@@ -1,0 +1,40 @@
+<%- include('partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
+            <form action="/update_tipos_ticket" class="form-control" method="post" onsubmit="updateTipodeTicket(); return false;">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Alterar tipo de ticket
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="tipo_ticket" class="form-control form-control-lg inputs" value="<%=tipo.tipo_ticket%>"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="tipo_ticket">Ex: Importação, Ajuste, Revisão</label>
+                       
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="updateTipodeTicket()" class="btn btn-success">Salvar</div>
+                        <a href="/listar_tipos_ticket"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+                <input type="hidden" name="id" style="display: none;" value="<%=tipo.id%>">
+            </form>
+            
+        </div>
+
+    </div>
+    
+</body>
+
+<%- include('partials/footer.ejs') %>

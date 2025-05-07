@@ -3,7 +3,7 @@ const connection = require('./db')
 
 const grupos_de_usuarios = connection.define('grupos_de_usuarios',{
     grupo:{
-        type: sequelize.TEXT,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     inserir:{

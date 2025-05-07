@@ -1,0 +1,317 @@
+body{
+    background-color: #fff
+}
+/* Estilo dos cards */
+.card {
+    border-radius: 15px;
+    border: none;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+.card-header {
+    background-color: #fff;
+    color: #495057;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+/* Botões com ícones */
+.card-item {
+    font-size: 1rem;
+    color: #495057;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.card-item i {
+    margin-right: 10px;
+}
+
+/* Efeito de hover nos botões */
+.card-item:hover {
+    background-color: #a1a1a1;
+    color: white;
+    transform: scale(1.05);
+}
+
+.card-item:active {
+    transform: scale(1.02);
+}
+/* Ajuste nos cards responsivos */
+.col-md-4 {
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .col-md-4 {
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+}
+  /* Garantir que a página ocupe toda a altura da tela */
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  /* Usar flexbox para garantir que o footer fique no fim da tela */
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  /* Footer fixado na parte inferior */
+  .footer {
+    margin-top: auto;
+  }
+
+/* Estiliza as divs para se comportarem como botões */
+.btn-secao {
+    cursor: pointer;
+   padding: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: solid transparent;  /* Borda inicial transparente */
+    border-radius: 5px;
+    transition: all 0.3s ease;   /* Transição suave */
+}
+
+
+/* Estilo do botão selecionado (indicado pela borda inferior) */
+.btn-selecao {
+    border-bottom: 3px solid #007bff; /* Borda azul na parte inferior */
+    color: #007bff;  /* Cor do texto quando selecionado */
+}
+
+/* Ajuste no estilo do card */
+.card-header {
+    font-weight: bold;
+    background-color: #f1f1f1;
+}
+
+.card-body {
+    font-size: 1.1rem;
+    color: #555;
+}
+/* Estilos gerais */
+.ticket-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+
+/* Estilo para o cabeçalho do ticket */
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.ticket-id {
+    font-size: 18px;
+    color: #007bff;
+}
+
+.ticket-status {
+    padding: 4px 8px;
+    border-radius: 5px;
+    color: white;
+}
+
+
+/* Estilo para os detalhes do ticket */
+.ticket-details {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+}
+
+.ticket-prioridade, .ticket-tipo {
+    background-color: #f1f1f1;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+.pausa-detalhes{
+    background-color: #f1f1f1;
+    padding: 0.5rem ;
+    border-radius: 5px;
+}
+.data-pausa{
+    font-size: 15px;
+    margin-top: -105px;
+}
+
+
+
+.navbar-custom .navbar-nav .nav-link {
+    color: #d1d1d1;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0.5rem 1rem;
+}
+
+
+.info-card {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.badge {
+    font-weight: bold;
+    padding: 8px 15px;
+    border-radius: 50px;
+}
+h5 {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.cabecalhoLista{
+    font-size: 20px;
+    text-align: center;
+    justify-content: left;
+    align-items: center;
+    background-color: #f7f7f7;
+    color: #007bff;
+}
+.lista{
+    background-color: #007bff;
+    padding: 10px;
+    color: #fff;
+}
+a.SemLink{
+    text-decoration: none;
+}
+.SelectOrdenacao {
+    flex: 1 1 0%;
+    border: transparent;
+    background-color: #f7f7f7;
+    border-radius: 0.25rem;
+    padding: 5px 50px 5px 10px; /* Padding ajustado para dar espaço à seta */
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAKCAYAAABrGwT5AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAC2SURBVHgBpc8xCsIwFAbg/6Xo7OjWdtDBySNEUXGokCPoSexRvIKDk2DxBK4ioj1CRgfbZ1tRUjWl4D9kCPn+vAdkkVK1UDPmWyHHs7loJgc5VV4dSI17JCdBWGDB7ALsiTSJqgpekAj9pwGc6+W09/0uQFDErNxObx2fj9oGwbzabTeLAudHVYEN5iHzh+EoWEIgzK7jVDgD3KBt8At/FjCztsH32GZKKxDaNvgTlwrAsQ3+nQeY02Y0uvQN4QAAAABJRU5ErkJggg==);
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    margin-left: 0.5rem;
+    color: rgb(66, 70, 77);
+    appearance: none;
+    position: relative; 
+}
+.DetalhesFiltro{
+    background-color: #f7f7f7;
+    color: rgb(86, 92, 105);
+    border-radius: 5px;
+}
+.TituloDetalhes{
+    padding: 0.75rem;
+    font-weight: 600;
+    align-items: center;
+}
+.TituloFiltros{
+    color: rgb(86, 92, 105);
+    font-weight: 800;
+}
+/* Estilo para o botão */
+.custom-btn {
+    border: none;
+    background: transparent;
+}
+
+/* Estilo para o ícone */
+.custom-icon {
+    font-size: 1.25rem; /* Aumenta o tamanho da lupa */
+    color: rgb(138, 138, 138); /* Cor do ícone igual ao btn-primary */
+    background-color: transparent;
+}
+/* Ocultar as classes 'ordenar' e 'quantidade' em telas pequenas */
+@media (max-width: 767px) {
+    .ordenar, .quantidade, #formulariofiltro {
+        display: none;
+    }
+}
+
+.CardExibeUltimosRegistros-link {
+text-decoration: none;
+color: inherit;
+}
+
+.CardExibeUltimosRegistros-card {
+background: #f7f7f7;
+border-radius: 16px;
+overflow: hidden;
+transition: 0.3s ease;
+border: 1px solid #dee2e6;
+height: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 1.5rem;
+}
+
+.CardExibeUltimosRegistros-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.CardExibeUltimosRegistros-icon {
+background: #0d6efd10;
+color: #0d6efd;
+font-size: 1.8rem;
+width: 60px;
+height: 60px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-bottom: 1rem;
+}
+.CardExibeUltimosRegistros-content {
+text-align: center;
+}
+.CardExibeUltimosRegistros-title {
+font-size: 1.1rem;
+font-weight: 600;
+margin-bottom: 0.5rem;
+color: #212529;
+}
+.CardExibeUltimosRegistros-subtitle {
+font-size: 0.9rem;
+color: #6c757d;
+margin-bottom: 0.75rem;
+}
+.CardExibeUltimosRegistros-status {
+font-size: 0.75rem;
+padding: 0.35em 0.75em;
+border-radius: 20px;
+}
+.CardExibeUltimosRegistros-headerCard {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+.CardExibeUltimosRegistros-headerTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #0d6efd;
+}

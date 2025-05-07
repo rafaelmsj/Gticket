@@ -4,7 +4,7 @@ const connection = require('./db')
 const versao_sistema = connection.define('versao_sistema',{
 
     versao: {
-        type: sequelize.TEXT,
+        type: sequelize.STRING(50),
         allowNull: false
     },
     ativo: {

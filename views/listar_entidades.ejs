@@ -48,7 +48,7 @@
                     </div>
                     
                         <!-- Filtros (Instalação, Ordenar por) -->
-                            <div class="justify-content-center mt-4" id="DivFiltros" style="display: none;">
+                            <div class="mt-4 ml-4" id="DivFiltros" style="display: none;">
                                 <!-- Instalação -->
                                 <div class="justify-content-center">
                                     <span>Instalado</span>
@@ -90,6 +90,8 @@
                                     </div>
                                 </div>
                             </div>
+
+                            
                         </form>
                     
                 </div>
@@ -102,48 +104,91 @@
                     
                     <div class="container">
                         <% entidades.forEach((entidade) => { %>
-                            
-                          <div class="border-bottom py-2">
-                            <div class="row align-items-center">
-                              <div class="col-12 col-md"><strong><%= entidade.cidade.toUpperCase() %> / <%= entidade.estado.toUpperCase() %></strong></div>
-                              <div class="col-12 col-md"><strong>Tipo:</strong> <%= tipos.find(tipo => tipo.id === entidade.tipo_entidade)?.tipo_entidade || 'N/A' %></div>
-                              <div class="col-12 col-md"><strong>Versão:</strong> <%= versoes.find(versao => versao.id === entidade.versao_sistema)?.versao || 'N/A' %></div>
-                              <div class="col-auto ms-auto">
-                                
-                                    <button class="btn btn-info btn-sm rounded-pill" onclick="carregaBtns('<%=entidade.id%>')" id="botaomais" >
-                                        <i class="fas fa-plus"></i> <!-- Ícone de "+" -->
-                                    </button>
-                                
-                              </div>
-                            </div>
-                          
-                            <div style="display: none;" id="botoes-<%=entidade.id%>" class="mt-2">
-                              <form action="/deletar_entidade" method="post" class="flex">
-                                  <% if(infoGrupo.alterar === 1){%>
-                                      <a href="alterar_entidades/<%=entidade.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
-                                        <i class="fas fa-edit"></i> Alterar
-                                      </div></a>
-                                  <%}%>
+                           
+                            <div class="ticket-card mb-3" onclick="carregaBtns('<%=entidade.id%>')">
+                                <div class="ticket-header d-flex justify-content-between align-items-center">
+                                    <%
+                                        var tipoOk = ''
+                                        var tipo = tipos.find(tipo => tipo.id === entidade.tipo_entidade)
+                                        if(tipo){
+                                            tipoOk = tipo.tipo_entidade.toUpperCase()
+                                        }
+                                     %>  
+                                    
+                                    <span class="ticket-id">
+                                       <%=tipoOk%> DE <%=entidade.cidade.toUpperCase()%>/<%=entidade.estado.toUpperCase()%>
+                                    </span>
+                                    <span class="ticket-date text-muted">
+                                        <%= new Date(entidade.createdAt).toLocaleString('pt-BR', { 
+                                            day: '2-digit', 
+                                            month: '2-digit', 
+                                            year: 'numeric'
+                                        })%>
+                                    </span>
+                                </div>
     
-                                  <% if(infoGrupo.deletar === 1){%>
-                                        <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=entidade.id%>')" >
-                                            <i class="fas fa-trash-alt"></i> Deletar
-                                        </div>
-                                 <%}%>
+                                
+                                <div class="ticket-details mt-2">
+                                    <% 
+                                        var versaoOK = ''
+                                        var versao = versoes.find(versao => versao.id === entidade.versao_sistema)
+                                        if(versao){
+                                            versaoOK = versao.versao.toUpperCase()
+                                        }
+                                    %>
+                                    <span class="ticket-prioridade d-block">Versão: <%=versaoOK %></span>
+    
+                                    <span class="ticket-tipo d-block">Instalado: <%= entidade.instalado === 1 ? 'Sim' : 'Não';%></span>
+                                </div>
+                                <% 
+                                    var ticketOk = ''
+                                    var ticket = tickets.find(ticket => ticket.id_entidade === entidade.id);
+                                    if(ticket){
+                                        ticketOk = 'Sim'
+                                    }
+                                    else{
+                                        ticketOk = 'Não'
+                                    }
+                                %>
+                                
+                                <div class="ticket-details mt-2">
+                                    <span class="ticket-assunto d-block text-uppercase"><strong>Tickets em aberto:</strong> <%=ticketOk%></span>
+                                </div>
+    
+                                <div style="display: none;" id="botoes-<%=entidade.id%>" class="mt-2">
+                                    <div class="d-flex">
+                                        <form action="/deletar_entidade" method="post" class="flex" id="formDelete">
+                                            <% if(infoGrupo.alterar === 1){%>
+                                                <a href="alterar_entidades/<%=entidade.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
+                                                <i class="fas fa-edit"></i> Alterar
+                                                </div></a>
+                                            <%}%>
+            
+                                            <% if(infoGrupo.deletar === 1){%>
+                                                <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=entidade.id%>')" >
+                                                    <i class="fas fa-trash-alt"></i> Deletar
+                                                </div>
+                                        <%}%>
+        
+                                        <a target="_blank" href="/entidade/<%=entidade.id%>"><div style="display: inline-block;" class="btn btn-dark btn-sm botao_visualizar">
+                                            <i class="fas fa-eye"></i> Visualizar
+                                        </div></a>
 
-                                 <div style="display: inline-block;" class="btn btn-dark btn-sm botao_visualizar">
-                                    <i class="fas fa-eye"></i> Visualizar
-                                 </div>
-                                 
+                                            <input style="display: none;" type="hidden" name="id" value="<%=entidade.id%>"></input>
+                                        </form> 
 
-                                  <input style="display: none;" type="hidden" name="id" value="<%=entidade.id%>"></input>
-                              </form> 
-                              
+                                        <form action="/listar_tickets" method="GET">
+                                            <button style="display: inline-block;" class="btn btn-laranja btn-sm botao_visualizar">
+                                                <i class="fas fa-ticket-alt"></i> Tickets
+                                            </button>
+                                            <input style="display: none;" type="hidden" name="idEntidade" value="<%=entidade.id%>"></input>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
     
-                          </div>
                         <% }); %>
-                      </div>
+                    </div>
                       
                      
                 </div>

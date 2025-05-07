@@ -25,7 +25,7 @@
                         <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
                             <!--ESTADO-->
                         <label for="estado" ><strong>Estado</strong></label>
-                        <select disabled name="estado" id="estado" class="form-control form-control-lg inputs">
+                        <select disabled class="form-control form-control-lg inputs">
                             <option value="<%=entidade.estado%>"><%=entidade.estado.toUpperCase()%></option>
                         </select>
                         <br>
@@ -59,7 +59,7 @@
                                 <!--VERSAO DO SISTEMA-->
                                 <div class="col">
                                     <label for="versao_sistema" class="form-label"><strong>Versão do Sistema</strong></label>
-                                    <select name="versao_sistema" class="form-control form-control-lg inputs">
+                                    <select name="versao_sistema" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                         
                                         <% versao_sistema.forEach((versao) => { %>
     
@@ -117,7 +117,7 @@
                             <div class="row g-3 align-items-end"> 
                                 <div class="col">
                                     <label for="website_concorrente" class="form-label"><strong>Website Concorrente</strong></label>
-                                    <select name="website_concorrente" class="form-control form-control-lg inputs">
+                                    <select name="website_concorrente" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                         <% concorrentes.forEach((concorrente) => { %>
     
                                             <% if(concorrente.id == entidade.website_concorrente){%>
@@ -136,7 +136,7 @@
                                     <!--Sistema concorrente-->
                                 <div class="col">
                                     <label for="sistema_concorrente" class="form-label"><strong>Sistema Concorrente</strong></label>
-                                    <select name="sistema_concorrente" class="form-control form-control-lg inputs">
+                                    <select name="sistema_concorrente" class="form-control form-control-lg inputs camposBuscaPesquisa">
                                         
                                         <% concorrentes.forEach((concorrente) => { %>
     
