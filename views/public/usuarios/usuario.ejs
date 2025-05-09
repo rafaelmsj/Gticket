@@ -1,0 +1,277 @@
+<%- include('../../partials/headPublic.ejs') %>
+
+<body>
+    <div class="wrapper">
+        <div class="container mt-5">
+            <h4>
+               <%=usuario.nome.toUpperCase()%>
+            </h4>
+            <hr>
+            <div class="d-flex mb-5">
+                <div class="btn-secao" id="sobreBtn">Sobre</div>
+                <div class="btn-secao ml-4" id="ticketsBtn">Tickets</div>
+            </div>
+
+            <div class="container mt-5">
+                <div class="card shadow-lg" style="display: none;" id="CardSobre">
+                    <div class="card-header">
+                        <h5 class="mb-0">Detalhes do Usuário</h5>
+                    </div>
+                    <div class="card-body">
+
+                    
+                        <!-- Informações Principais -->
+                        <div class="row">
+                            <!-- Data de Criação -->
+                            <div class="col-md-4 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-calendar-check"></i> Data de Criação</h5>
+                                    <p>
+                                        <%= 
+                                            new Date(usuario.createdAt).toLocaleString('pt-BR')
+                                        %>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Data de Início -->
+                            <div class="col-md-4 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-building"></i> Setor</h5>
+                                    <p>
+                                        <%=setor.setor.toUpperCase()%>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Data de Previsão -->
+                            <div class="col-md-4 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-calendar-alt"></i> Data de Previsão</h5>
+                                    <p>
+                                        
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <% 
+                            var ContagemResponsavel = 0
+                            var contagemAberto = 0
+                            var contagemFinalizado = 0
+                            var contagemPausa = 0
+                            var contagemAuxiliar = 0
+                        %>
+                        <% TicketTotal.forEach((ticketContagem) => {%>
+                            <%  
+                                if(ticketContagem.responsavel == usuario.id){
+                                    if(ticketContagem.status_geral != 'finalizado'){
+                                        ContagemResponsavel ++
+                                        contagemAberto ++
+                                    }
+                                    if(ticketContagem.status_geral == 'finalizado'){
+                                        contagemFinalizado ++
+                                    }
+                                    if(ticketContagem.status_geral == 'pausado'){
+                                        contagemPausa ++
+                                    }
+
+                                } 
+                                else {
+                                    var auxiliaresPT = ticketContagem.auxiliares.split(',')
+                                    for(let i = 0; i < auxiliaresPT.length; i++){
+                                        if(auxiliaresPT[i] == usuario.id && ticketContagem.status_geral != 'finalizado'){
+                                            contagemAberto++
+                                            contagemAuxiliar++
+                                        }
+
+                                        if(auxiliaresPT[i] == usuario.id && ticketContagem.status_geral == 'finalizado'){
+                                            contagemFinalizado++
+                                        }
+
+                                        if(auxiliaresPT[i] == usuario.id && ticketContagem.status_geral == 'pausado'){
+                                            contagemPausa++
+                                        }
+                                    }
+                                }
+                            %>
+                        
+                        <%})%>
+
+                        <!-- Outras Informações -->
+                        <div class="row">
+                            <!-- Tipo do Ticket -->
+                            <div class="col-md-4 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-tag"></i> Tickets em aberto</h5>
+                                    <span class="badge bg-warning text-white"> <%=contagemAberto%></span>
+                                </div>
+                            </div>
+                    
+                            <!-- Prioridade -->
+                            <div class="col-md-4 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-exclamation-circle"></i> Tickets em pausa</h5>
+                                    <span class="badge bg-danger text-white"> <%=contagemPausa%></span>
+                                </div>
+                            </div>
+                    
+                            <!-- Status Geral -->
+                            <div class="col-md-4 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-check-circle"></i> Tickets finalizados</h5>
+                                    <span class="badge bg-success text-white"><%=contagemFinalizado%></span>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Responsáveis e Auxiliares -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-user"></i> Tickets em aberto como responsável</h5>
+                                    <p class="text-uppercase">
+                                        <%=ContagemResponsavel%>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="info-card">
+                                    <h5><i class="fas fa-users"></i> Tickets em aberto como Auxiliar</h5>
+                                    <p class="text-uppercase">
+                                        <%=contagemAuxiliar%>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+            </div>
+
+            <div class="card" id="ticketsCard" style="display: none;">
+                    <div class="card-header">
+                        Tickets
+                    </div>
+                    <div class="card-body">
+                        
+                        <% if(Tickets.length < 1){%>
+                            <div class="pausa-detalhes mt-2">
+                                <span><strong>Este usuário ainda não participou de nenhum ticket.</strong></span><br>
+                                <span class="text-muted data-pausa">
+                                    <%= new Date().toLocaleString('pt-BR', { 
+                                        day: '2-digit', 
+                                        month: '2-digit', 
+                                        year: 'numeric', 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                    }) %>
+                                </span>
+                        <%}%>
+
+                        <% Tickets.forEach((ticket) => { %>
+                            <% 
+                            var Prioridade = '';
+                            var tipoTicket = '';
+
+                            prioridades.forEach((prioridade) => {
+                                if (prioridade.id === ticket.id_prioridade) {
+                                    Prioridade = prioridade.prioridade;
+                                }
+                            });
+
+                            tipos_ticket.forEach((tipo_ticket) => {
+                                if (tipo_ticket.id === ticket.id_tipo) {
+                                    tipoTicket = tipo_ticket.tipo_ticket;
+                                }
+                            });
+                            %>
+
+                            <% if(ticket.responsavel == usuario.id){%>
+                                <div class="card-header">Responsável</div>
+                            <%} else {%>
+                                <div class="card-header">Auxiliar</div>
+                            <%}%>
+                            <div class="ticket-card mb-3" onclick="carregaBtns('<%=ticket.id%>')">
+                                <div class="ticket-header d-flex justify-content-between align-items-center">
+                                    <% 
+                                        var entidadeOK = ''
+                                        var tipoOK   
+                                        var entidade = entidades.find(entidade => entidade.id == ticket.id_entidade)
+                                        if (entidade){
+                                            entidadeOK = entidade.cidade.toUpperCase() +'/'+ entidade.estado.toUpperCase()
+                                            var tipo = tipos.find(tipo => tipo.id == entidade.tipo_entidade)
+                                            if(tipo){
+                                                tipoOK = tipo.tipo_entidade.toUpperCase()
+                                            }
+                                        }
+                                    %>
+                                    <span class="ticket-id">
+                                        <%=tipoOK%> DE <%=entidadeOK%> #<%= ticket.id%>00<%=ticket.id_entidade%>
+                                    </span>
+                                    <span class="ticket-date text-muted">
+                                        <%= new Date(ticket.createdAt).toLocaleString('pt-BR', { 
+                                            day: '2-digit', 
+                                            month: '2-digit', 
+                                            year: 'numeric'
+                                        })%>
+                                    </span>
+                                </div>
+
+                                
+                                <div class="ticket-details mt-2">
+                                    <span class="ticket-prioridade d-block">Prioridade: <%= Prioridade.toUpperCase() %></span>
+                                    <span class="ticket-tipo d-block">Tipo: <%= tipoTicket.toUpperCase() %></span>
+                                </div>
+                                
+                                <div class="ticket-details mt-2">
+                                    <span class="ticket-assunto d-block"><strong>Assunto:</strong> <%= ticket.assunto.toUpperCase() %></span>
+                                    <span class="ticket-status-geral d-block"><strong>Status:</strong> <%= ticket.status_geral.toUpperCase() %></span>
+                                </div>
+
+                                <div style="display: none;" id="botoes-<%=ticket.id%>" class="mt-2">
+                                    <a target="_blank" href="/ticket/<%=ticket.id%>"><div style="display: inline-block;" class="btn btn-dark btn-sm botao_visualizar">
+                                        <i class="fas fa-eye"></i> Visualizar
+                                     </div></a>
+                                </div>
+                            </div>
+
+                        <% }) %>
+                    </div>
+
+                
+                    <% if(totalPages > 0){%>
+                        <div class="card-footer">
+        
+                            <div class="d-flex justify-content-center">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                            <a class="page-link" href="?page=<%= currentPage - 1 %>">Anterior</a>
+                                        </li>
+                                        
+                                        <% for (let i = 1; i <= totalPages; i++) { %>
+                                            <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                                            </li>
+                                        <% } %>
+                                
+                                        <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                            <a class="page-link" href="?page=<%= currentPage + 1 %>">Próximo</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                
+                            </div>
+                        </div>
+                    <%}%>
+                
+            </div>
+
+        </div>
+        
+        <br>
+    </div>
+</div>
+</body>
+
+<%- include('../../partials/footerPublic') %>

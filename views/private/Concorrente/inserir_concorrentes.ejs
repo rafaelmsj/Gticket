@@ -1,0 +1,39 @@
+<%- include('../../partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
+            <form action="/admin/salvar_concorrentes" class="form-control" method="post" onsubmit="cadastrarConcorrentes(); return false;">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira o nome da empresa concorrente
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="concorrente" class="form-control form-control-lg inputs"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="concorrente">Ex: LANCER, SAPL, GDOC</label>
+                       
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="cadastrarConcorrentes()" class="btn btn-success">Salvar</div>
+                        <a href="/admin/listar_concorrentes"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+            </form>
+            
+        </div>
+
+    </div>
+
+</body>
+
+<%- include('../../partials/footer.ejs') %>

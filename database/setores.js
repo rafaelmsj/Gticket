@@ -1,7 +1,7 @@
 const sequelize = require('sequelize');
 const connection = require('./db')
 
-var setores = connection.define('setores',{
+const setores = connection.define('setores',{
 
     setor: {
         type: sequelize.STRING(50),

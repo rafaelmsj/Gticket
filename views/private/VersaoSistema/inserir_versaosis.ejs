@@ -1,0 +1,34 @@
+<%- include('../../partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+        <div class="container">
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
+            <form action="/admin/salvarversao" class="form-control" method="post" onsubmit="cadastrarVersao(); return false;">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira a versão do sistema
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="versaosis" class="form-control form-control-lg inputs"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="versaosis">Ex: Softcam, Plenus, Legislarr</label>
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="cadastrarVersao()" class="btn btn-success">Salvar</div>
+                        <a href="/admin/listar_versaosis"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+            </form>
+            
+        </div>
+    </div>
+
+</body>
+<%- include('../../partials/footer.ejs') %>

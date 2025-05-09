@@ -110,7 +110,7 @@ function updateCheckboxValue(checkbox) {
         // Se todas as validações passarem, enviar o formulário
         if (valido) {
             // Fazer o envio dos dados via fetch
-            fetch('/alterar_password', {
+            fetch('/admin/alterar_password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -272,7 +272,7 @@ function updateCheckboxValue(checkbox) {
         if (valido){
             
             // Fazer o envio dos dados via fetch
-            fetch('/salvar_usuarios', {
+            fetch('/admin/salvar_usuarios', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json' // Definindo o tipo para JSON
@@ -300,7 +300,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert', 'alert-success');
                         alerta.style.display = 'none'
-                        window.location.href = '/listar_usuarios';s
+                        window.location.href = '/admin/listar_usuarios';
                     }, 1000);
                     
                 }
@@ -346,7 +346,7 @@ function updateCheckboxValue(checkbox) {
         if (valido){
             
             // Fazer o envio dos dados via fetch
-            fetch('/update_usuarios', {
+            fetch('/admin/update_usuarios', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json' // Definindo o tipo para JSON
@@ -372,7 +372,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_usuarios'
+                        window.location.href = '/admin/listar_usuarios'
                     },1000);
                 }
                 else {
@@ -414,7 +414,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_modulos', {
+            fetch('/admin/salvar_modulos', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -436,7 +436,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_modulos'
+                        window.location.href = '/admin/listar_modulos'
                     },1000);
                 }
                 else {
@@ -477,7 +477,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_modulos', {
+            fetch('/admin/update_modulos', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -500,7 +500,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_modulos'
+                        window.location.href = '/admin/listar_modulos'
                     },1000);
                 }
                 else {
@@ -539,7 +539,7 @@ function updateCheckboxValue(checkbox) {
         
             if(valido){
 
-                fetch('/salvar_concorrentes',{
+                fetch('/admin/salvar_concorrentes',{
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -561,7 +561,7 @@ function updateCheckboxValue(checkbox) {
                         setTimeout(function(){
                             alerta.classList.remove('alert','alert-success');
                             alerta.style.display = 'none';
-                            window.location.href = '/listar_concorrentes'
+                            window.location.href = '/admin/listar_concorrentes'
                         },1000);
                     }
                     else {
@@ -601,7 +601,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_concorrentes', {
+            fetch('/admin/update_concorrentes', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -624,7 +624,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_concorrentes'
+                        window.location.href = '/admin/listar_concorrentes'
                     },1000);
                 }
                 else {
@@ -664,7 +664,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvarversao',{
+            fetch('/admin/salvarversao',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -686,7 +686,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_versaosis'
+                        window.location.href = '/admin/listar_versaosis'
                     },1000);
                 }
                 else {
@@ -727,7 +727,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_versao', {
+            fetch('/admin/update_versao', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -750,7 +750,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_versaosis'
+                        window.location.href = '/admin/listar_versaosis'
                     },1000);
                 }
                 else {
@@ -790,7 +790,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvarsetor',{
+            fetch('/admin/salvarsetor',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -813,7 +813,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_setor'
+                        window.location.href = '/admin/listar_setor'
                     },1000);
                 }
                 else {
@@ -855,7 +855,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_setor', {
+            fetch('/admin/update_setor', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -879,7 +879,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_setor'
+                        window.location.href = '/admin/listar_setor'
                     },1000);
                 }
                 else {
@@ -918,7 +918,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_tipos_entidade',{
+            fetch('/admin/salvar_tipos_entidade',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -940,7 +940,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_tipos_entidade'
+                        window.location.href = '/admin/listar_tipos_entidade'
                     },1000);
                 }
                 else {
@@ -981,7 +981,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_tipo_entidade', {
+            fetch('/admin/update_tipo_entidade', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1004,7 +1004,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_tipos_entidade'
+                        window.location.href = '/admin/listar_tipos_entidade'
                     },1000);
                 }
                 else {
@@ -1046,7 +1046,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_grupos_de_usuarios',{
+            fetch('/admin/salvar_grupos_de_usuarios',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1071,7 +1071,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_grupos_de_usuarios'
+                        window.location.href = '/admin/listar_grupos_de_usuarios'
                     },1000);
                 }
                 else {
@@ -1115,7 +1115,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_grupos_de_usuarios',{
+            fetch('/admin/update_grupos_de_usuarios',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1141,7 +1141,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_grupos_de_usuarios'
+                        window.location.href = '/admin/listar_grupos_de_usuarios'
                     },1000);
                 }
                 else {
@@ -1197,7 +1197,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_entidades',{
+            fetch('/admin/salvar_entidades',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1227,7 +1227,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_entidades'
+                        window.location.href = '/admin/listar_entidades'
                     },1000);
                 }
                 else {
@@ -1279,7 +1279,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_entidade',{
+            fetch('/admin/update_entidade',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1307,7 +1307,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_entidades'
+                        window.location.href = '/admin/listar_entidades'
                     },1000);
                 }
                 else {
@@ -1347,7 +1347,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_prioridade',{
+            fetch('/admin/salvar_prioridade',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1369,7 +1369,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_prioridades'
+                        window.location.href = '/admin/listar_prioridades'
                     },1000);
                 }
                 else {
@@ -1410,7 +1410,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_prioridade', {
+            fetch('/admin/update_prioridade', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1433,7 +1433,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_prioridades'
+                        window.location.href = '/admin/listar_prioridades'
                     },1000);
                 }
                 else {
@@ -1472,7 +1472,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_tipos_ticket',{
+            fetch('/admin/salvar_tipos_ticket',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1494,7 +1494,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_tipos_ticket'
+                        window.location.href = '/admin/listar_tipos_ticket'
                     },1000);
                 }
                 else {
@@ -1535,7 +1535,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/update_tipos_ticket', {
+            fetch('/admin/update_tipos_ticket', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1558,7 +1558,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_tipos_ticket'
+                        window.location.href = '/admin/listar_tipos_ticket'
                     },1000);
                 }
                 else {
@@ -1601,7 +1601,7 @@ function updateCheckboxValue(checkbox) {
 
         if(valido){
 
-            fetch('/salvar_ticket',{
+            fetch('/admin/salvar_ticket',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1627,7 +1627,7 @@ function updateCheckboxValue(checkbox) {
                     setTimeout(function(){
                         alerta.classList.remove('alert','alert-success');
                         alerta.style.display = 'none';
-                        window.location.href = '/listar_tickets'
+                        window.location.href = '/admin/listar_tickets'
                     },1000);
                 }
                 else {
@@ -1667,7 +1667,7 @@ function updateCheckboxValue(checkbox) {
         .join(','); // Usando vírgula como separador
         
          
-        fetch('/update_ticket',{
+        fetch('/admin/update_ticket',{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1695,7 +1695,7 @@ function updateCheckboxValue(checkbox) {
                 setTimeout(function(){
                     alerta.classList.remove('alert','alert-success');
                     alerta.style.display = 'none';
-                    window.location.href = '/listar_tickets'
+                    window.location.href = '/admin/listar_tickets'
                 },1000);
             }
             else {
@@ -1766,7 +1766,7 @@ async function verificarStatusComModal() {
         var motivo = await esperarMotivoModal();
         
         if (motivo){
-            fetch('/ticketPausa',{
+            fetch('/admin/ticketPausa',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1794,7 +1794,7 @@ async function verificarStatusComModal() {
         var motivo = await esperarMotivoModal();
         
         if (motivo){
-            fetch('/ticketPausa',{
+            fetch('/admin/ticketPausa',{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1819,15 +1819,12 @@ async function verificarStatusComModal() {
 }
 
 
-
-
-
 //FUNCOES DE PERMISSAO, SO ACESSA PAGINA SE O USUARIO TIVER PERMISSAO
     function acessaPGgrupoUsuario() {
 
     const alerta = document.getElementById('alertaerro');
 
-    fetch('/listar_grupos_de_usuarios', {
+    fetch('/admin/listar_grupos_de_usuarios', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -1851,7 +1848,7 @@ async function verificarStatusComModal() {
         }
     })
     .catch(error => {
-        window.location.href = '/listar_grupos_de_usuarios'
+        window.location.href = '/admin/listar_grupos_de_usuarios'
     });
     }
 
@@ -1859,7 +1856,7 @@ async function verificarStatusComModal() {
 
     const alerta = document.getElementById('alertaerro');
 
-    fetch('/listar_usuarios', {
+    fetch('/admin/listar_usuarios', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -1883,7 +1880,7 @@ async function verificarStatusComModal() {
         }
     })
     .catch(error => {
-        window.location.href = '/listar_usuarios'
+        window.location.href = '/admin/listar_usuarios'
     });
     }
 

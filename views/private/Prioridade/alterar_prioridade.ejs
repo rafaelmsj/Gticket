@@ -1,0 +1,40 @@
+<%- include('../../partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
+            <form action="/admin/update_prioridade" class="form-control" method="post" onsubmit="updatePrioridade(); return false;">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Alterar tipo de prioridade
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="prioridade" class="form-control form-control-lg inputs" value="<%=prioridade.prioridade%>"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="prioridade">Ex: Câmara, Prefeitura</label>
+                       
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="updatePrioridade()" class="btn btn-success">Salvar</div>
+                        <a href="/admin/listar_prioridades"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+                <input type="hidden" name="id" style="display: none;" value="<%=prioridade.id%>">
+            </form>
+            
+        </div>
+
+    </div>
+    
+</body>
+
+<%- include('../../partials/footer.ejs') %>

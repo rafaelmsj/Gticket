@@ -1,0 +1,39 @@
+<%- include('../../partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
+            <form action="/admin/salvar_tipos_ticket" class="form-control" method="post" onsubmit="cadastrarTipodeTicket(); return false;">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Insira o tipo de ticket
+                    </div>
+    
+                    <div class="card-body">
+                        <input type="text" name="tipo_ticket" class="form-control form-control-lg inputs"><br>
+                        <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        <label for="tipo_ticket">Ex: Importação, ajuste, revisão</label>
+                       
+                        
+                    </div>
+    
+                    <div class="card-footer">
+                        <div onclick="cadastrarTipodeTicket()" class="btn btn-success">Salvar</div>
+                        <a href="/admin/listar_tipos_ticket"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+            </form>
+            
+        </div>
+
+    </div>
+    
+</body>
+
+<%- include('../../partials/footer.ejs') %>

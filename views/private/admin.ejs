@@ -1,0 +1,235 @@
+<!--IMPORTANDO CABEÇALHO/NAVBAR-->
+<%- include('../partials/head') %>
+
+
+<body>
+    
+    <div class="wrapper">
+
+        <div class="container">
+
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: false;"></div>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <!-- Tickets -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-ticket-alt"></i> <strong>Tickets</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="/admin/listar_tickets" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-list-alt"></i> Listar Tickets
+                                </a>
+                                <a href="/admin/listar_tipos_ticket" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-cogs"></i> Tipos de Tickets
+                                </a>
+                                <a href="/admin/listar_prioridades" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-exclamation-circle"></i> Prioridades
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- Usuários -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-user"></i> <strong>Usuários</strong>
+                            </div>
+                            <div class="card-body">
+                                <div onclick="acessaPGUsuario()" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-users"></i> Usuários
+                                </div>
+                                <div id="menugrupos" onclick="acessaPGgrupoUsuario()" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-user-tag"></i> Grupos de Usuário
+                                </div>
+                                <a href="/admin/configurar_usuario" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-user"></i> Configurações do Usuário
+                                </a>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            
+                <div class="row justify-content-center">
+                    <!-- Sistema -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-tools"></i> <strong>Sistema</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="/admin/listar_versaosis" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-cogs"></i> Versão
+                                </a>
+                                <a href="/admin/listar_setor" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-building"></i> Setor
+                                </a>
+                                <a href="/admin/listar_concorrentes" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-users"></i> Concorrentes
+                                </a>
+                                <a href="/admin/listar_modulos" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-th-large"></i> Módulos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- Entidades -->
+                    <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header text-center">
+                                <i class="fas fa-cogs"></i> <strong>Entidades</strong>
+                            </div>
+                            <div class="card-body">
+                                <a href="/admin/listar_entidades" class="card-item btn btn-outline-dark w-100 mb-2">
+                                    <i class="fas fa-list"></i> Listar entidades
+                                </a>
+                                <a href="/admin/listar_tipos_entidade" class="card-item btn btn-outline-dark w-100">
+                                    <i class="fas fa-tags"></i> Tipos de entidade
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+    
+            <hr>
+            <br>
+            <% 
+                let count = 0;
+                let count1 = 0;
+                let limit = 20;
+            %>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Últimas Atualizações</strong>
+                        </div>
+                        <div class="card-body" style="max-height: 300px; overflow-y: scroll;">
+                            
+                            <% logs.forEach((log) => { 
+                                if (count < limit && (log.acao == 'alterado' || log.acao == 'inserido' || log.acao == 'deletado')) { %>
+                                    <div>
+                                        O Usuário <strong> 
+                                            <% 
+                                            var user = ''
+                                            usuarios.forEach((usuario) => { 
+                                                if(usuario.id == log.usuario){
+                                                    user = usuario.nome
+                                                }
+                                                
+                                                })%>
+                                                <%=user%></strong> 
+                                        <% if (log.acao == 'alterado') { %>
+                                            alterou o registro na página <%= log.tabela.replace(/_/g, ' ')
+                                            .replace('versao sistemas','versão')
+                                            .replace('tipos entidades', 'tipos de entidades')
+                                            .replace('usuarios','Usúarios')
+                                            .replace('modulos','módulos')
+                                            .replace('setores', 'setor')%>.
+                                            <br>
+                                            <div class="text-muted">
+                                                <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                    day: '2-digit', 
+                                                    month: '2-digit', 
+                                                    year: 'numeric', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                }).replace(',', ' às') %>
+                                            </div>
+                                        <% } else if (log.acao == 'inserido') { %>
+                                            inseriu um registro na página <%= log.tabela.replace(/_/g, ' ')
+                                            .replace('versao sistemas','versão')
+                                            .replace('tipos entidades', 'tipos de entidades')
+                                            .replace('usuarios','Usúarios')
+                                            .replace('modulos','módulos')
+                                            .replace('setores', 'setor')%>.
+                                            <br>
+                                            <div class="text-muted">
+                                                <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                    day: '2-digit', 
+                                                    month: '2-digit', 
+                                                    year: 'numeric', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                }).replace(',', ' às') %>
+                                            </div>
+                                        <% } else if (log.acao == 'deletado') { %>
+                                            deletou um registro na página <%= log.tabela.replace(/_/g, ' ')
+                                            .replace('versao sistemas','versão')
+                                            .replace('tipos entidades', 'tipos de entidades')
+                                            .replace('usuarios','Usúarios')
+                                            .replace('modulos','módulos')
+                                            .replace('setores', 'setor')%>.
+                                            <br>
+                                            <div class="text-muted">
+                                                <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                    day: '2-digit', 
+                                                    month: '2-digit', 
+                                                    year: 'numeric', 
+                                                    hour: '2-digit', 
+                                                    minute: '2-digit' 
+                                                }).replace(',', ' às') %>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <hr>
+                                    <% count++ %>
+                                <% } 
+                            }) %>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>Últimos Acessos</strong>
+                        </div>
+                        <div class="card-body" style="max-height: 300px; overflow-y: scroll;">
+                            
+                            <% logs.forEach((log) => { 
+                                if (count1 < limit && (log.acao == 'login' || log.acao == 'logout')) { %>
+                                    <div>
+                                        O Usuário <strong><% 
+                                            var user = ''
+                                            usuarios.forEach((usuario) => { 
+                                                if(usuario.id == log.usuario){
+                                                    user = usuario.nome
+                                                }
+                                                
+                                                })%>
+                                                <%=user%></strong> <%= log.acao == 'login' ? 'acessou o' : 'saiu do' %> sistema.
+                                        <br>
+                                        <div class="text-muted">
+                                            <%= new Date(log.createdAt).toLocaleString('pt-BR', { 
+                                                day: '2-digit', 
+                                                month: '2-digit', 
+                                                year: 'numeric', 
+                                                hour: '2-digit', 
+                                                minute: '2-digit' 
+                                            }).replace(',', ' às') %>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <% count1++ %>
+                                <% } 
+                            }) %>
+                        </div>
+                    </div>
+                </div>
+                
+    
+        </div>
+        
+    </div>
+    
+</body>
+<%- include('../partials/footer.ejs') %>

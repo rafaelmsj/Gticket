@@ -1,0 +1,176 @@
+<%- include('../../partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+            <div tabindex="-1" id="alertaerro" role="alert" style="display: none;"></div>
+            <form action="/admin/update_ticket" class="form-control" method="post" onsubmit="updateTicket(); return false;">
+                
+                <div class="card">
+                
+                    <div class="card-header">
+                        Ticket Nº <%=ticket.id%>00<%=ticket.id_entidade%>
+                    </div>
+    
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Título com Cidade/Estado e Tipo de Entidade -->
+                            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                                <h4 class="card-title text-uppercase w-100"><%=tipo_entidade.tipo_entidade%> De <%=entidade.cidade%>/<%=entidade.estado%></h4>
+                        
+                                <!-- Colocar os itens Prioridade, Status e Data Abertura em uma coluna, um abaixo do outro, à esquerda (para telas menores) -->
+                                <div class="d-flex">
+                                    <!-- Prioridade Badge -->
+                                    <span class="badge bg-primary text-uppercase mr-2">
+                                        <strong>Prioridade:</strong> <%=prioridade.prioridade%>
+                                    </span>
+                        
+                                    <!-- Tipo do Ticket Badge -->
+                                    <span class="badge bg-secondary text-uppercase mr-2">
+                                        <strong>TIPO TICKET:</strong> 
+                                        <span><%=tipo.tipo_ticket%></span>
+                                    </span>
+                        
+                                    <!-- Data de Abertura Badge -->
+                                    <span class="badge bg-info text-uppercase">
+                                        <strong>Data Abertura:</strong> 
+                                        <span><% var data = ticket.createdAt.toLocaleString()%> <%=data%></span>
+                                    </span>
+                                </div>
+                            </div>
+                        
+                            <hr>
+                        
+                            <!-- Assunto e Descrição do Ticket -->
+                            <div class="d-flex flex-column mt-2">
+                                <!-- Campo Assunto -->
+                                <div class="mb-3">
+                                    <strong>Assunto:</strong>
+                                    <span class="text-uppercase"><%=ticket.assunto%></span>
+                                </div>
+                        
+                                <!-- Campo Descrição -->
+                                <div class="mb-3">
+                                    <strong>Descrição:</strong> 
+                                    <span class="text-uppercase"><%=ticket.descricao%></span>
+                                </div>
+                            </div>
+                        
+                            <hr>
+                        
+                            <!-- Campos de Previsão, Responsável e Auxiliares -->
+                            <div class="d-flex flex-wrap justify-content-between mt-3">
+                                <!-- Previsão e Status Geral -->
+                                <div class="d-flex flex-wrap justify-content-between w-100 mb-3">
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label for="previsao"><strong>Previsão</strong></label>
+                                        <input class="form-control form-control-lg" type="date" name="previsao" id="previsao" <% if(ticket.dt_previsao != '0001-01-01'){%>value="<%=ticket.dt_previsao%>"<%}%>>
+                                    </div>
+                        
+                                    <div class="col-12 col-md-6 mb-3">
+                                        <label for="status_geral"><strong>Status Geral</strong></label>
+                                        <select class="form-control form-control-lg inputs" name="status_geral">
+                                            <option value="aguardando" <%if(ticket.status_geral === 'aguardando'){%> selected <%}%>>Aguardando</option>
+                                            <option value="execucao" <%if(ticket.status_geral === 'execucao'){%> selected <%}%>>Execução</option>
+                                            <option value="pausado" <%if(ticket.status_geral === 'pausado'){%> selected <%}%>>Pausado</option>
+                                            <option value="conferencia" <%if(ticket.status_geral === 'conferencia'){%> selected <%}%>>Conferência</option>
+                                        </select>
+                                    </div>
+                                </div>
+                        
+                                <!-- Campo Responsável -->
+                                <div class="mb-3 w-100">
+                                    <strong>Responsável</strong>
+                                    <select class="form-control form-control-lg inputs camposBuscaPesquisa" id="id_responsavel" name="id_responsavel">
+                                        <option value="" selected disabled>Selecione o Responsável:</option>
+                                        <% usuarios.forEach((usuario) => { %>
+                                            <option value="<%=usuario.id%>" <%if(ticket.responsavel === usuario.id){%> selected <%}%>><%=usuario.nome.toUpperCase()%></option>
+                                        <%})%>
+                                    </select>
+                                    <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                                </div>
+                            </div>
+                        
+                            <!-- Campo Auxiliares -->
+                            <div class="mb-3">
+                                <label for="id_auxiliar"><strong>Auxiliares</strong></label><br>
+                                <select class="form-control form-control-lg inputs camposBuscaPesquisa" id="id_auxiliar" name="id_auxiliar[]" multiple>
+                                    <% var auxiliar_pts = ticket.auxiliares.split(','); %>
+                                    <% usuarios.forEach((usuario) => { %>
+                                        <% if(usuario.id !== ticket.responsavel) { %>
+                                            <!-- Verifica se o id do usuário está presente em auxiliar_pts -->
+                                            <option value="<%=usuario.id%>" 
+                                                <% if (auxiliar_pts.includes(usuario.id.toString())) { %>
+                                                    selected
+                                                <% } %>
+                                            >
+                                                <%=usuario.nome.toUpperCase()%>
+                                            </option>
+                                        <% } %>
+                                    <% }) %>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="obs" class="form-label"><strong>Observações</strong></label>
+                                <textarea id="obs" name="obs" class="form-control form-control-lg"><%=ticket.observacao%></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="observacao_interna" class="form-label"><strong>Observações Internas</strong></label>
+                                <textarea id="observacao" name="observacao_interna" class="form-control form-control-lg"><%=ticket.observacao_interna%></textarea>
+                            </div>
+                        </div>
+                        
+                    
+    
+                    <div class="card-footer">
+                        <div onclick="verificarStatusComModal()" class="btn btn-success">Salvar</div>
+                        <a href="/admin/listar_tickets"><div class="btn btn-secondary">Voltar</div></a>
+                    </div>
+                    
+                </div>
+                
+                <input type="hidden" name="id" style="display: none;" value="<%=ticket.id%>">
+                <input type="hidden" name="status_atual" style="display: none;" value="<%=ticket.status_geral%>">
+            </form>
+
+            <form id="formPausa" action="/admin/ticketPausa" method="POST">
+                <div id="ModalPausa" class="modal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Ticket Pausa</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div id="MotivoPausa" style="display: none;">
+                                <label for="pausa"><strong>Insira o motivo da Pausa</strong></label>
+                                <input type="text" id="pausa" name="pausa" class="form-control form-control-lg inputs"><br>
+                                <div class="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                            </div>
+                            <div id="MotivoRetiradaPausa" style="display: none;">
+                                <label for="retiradapausa"><strong>Insira o motivo da retirada da Pausa</strong></label>
+                                <input type="text" id="retiradapausa" name="retiradapausa" class="form-control form-control-lg inputs"><br>
+                            </div>
+                            <div class="msg_erro" id="msg_erro" style="display: none;">*Campo Obrigatório</div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" id="botaoConfirmar" class="btn btn-primary">Salvar</button>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                <input type="hidden" name="idT" style="display: none;" value="<%=ticket.id%>">
+            </form>
+
+            
+        </div>
+
+    </div>
+    
+</body>
+
+<%- include('../../partials/footer.ejs') %>

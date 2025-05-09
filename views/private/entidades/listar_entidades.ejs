@@ -1,0 +1,232 @@
+<%- include('../../partials/head.ejs') %>
+
+<body>
+
+    <div class="wrapper">
+
+        <div class="container">
+
+
+
+            <div class="card mt-2">
+                
+                <div class="card-header">
+                    Entidades
+                </div>
+                
+                <div class="card-header">
+                
+                    <div class="d-flex flex-column flex-sm-row">
+                        <div class="d-flex flex-column flex-sm-row mb-3">
+                            <!-- Botões em uma linha em telas pequenas -->
+                            <div class="">
+                                <% if(infoGrupo.inserir === 1){%>
+                                    <a href="/admin/inserir_entidades"><button class="btn btn-primary rounded-pill botao_inserir" id="botao_inserir"><i class="fas fa-plus-circle"></i> Inserir</button></a>
+                                <%}%>
+                                <a href="/admin" class="mt-3"><div class="btn btn-secondary rounded-pill"><i class="fas fa-arrow-left"></i> Voltar</div></a>
+                    
+                                <!-- Botão filtro com ícone -->
+                                <div onclick="carregarFiltros()" class="btn btn-outline-secondary rounded-pill mr-4">
+                                    <i class="fas fa-filter"></i> <!-- Ícone de filtro adicionado -->
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- Formulário de busca -->
+                        <div id="2" class="d-flex flex-column flex-sm-row">
+                            <form id="formulariofiltro" action="/admin/listar_entidades" method="GET" class="w-100">
+                                <div class="input-group mb-3">
+                                    <input type="text" name="search" class="form-control rounded-pill" placeholder="Pesquisar..." aria-label="Pesquisar">
+                                    <div class="input-group-append">
+                                        <button type="submit" class="btn custom-btn">
+                                            <i class="fas fa-search custom-icon"></i> <!-- Ícone de lupa maior -->
+                                        </button>
+                                    </div>
+                                </div>
+                            
+                        </div>
+                    </div>
+                    
+                        <!-- Filtros (Instalação, Ordenar por) -->
+                            <div class="mt-4 ml-4" id="DivFiltros" style="display: none;">
+                                <!-- Instalação -->
+                                <div class="justify-content-center">
+                                    <span>Instalado</span>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" type="radio" checked name="instalado" id="instalado_todos" value="" <%if(instalado === ''){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="instalado_todos">Todos</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" type="radio" name="instalado" id="instalado_sim" value="1" ari <%if(instalado === '1'){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="instalado_sim">Sim</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" type="radio" name="instalado" id="instalado_nao" value="0" <%if(instalado === '0'){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="instalado_nao">Não</label>
+                                    </div>
+                                </div>
+                            
+                                <!-- Linha separadora vertical -->
+                                <div class="vr mx-2"></div>
+                            
+                                <!-- Ordenar por -->
+                                <div class="ml-3">
+                                    <span>Ordenar por</span>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" checked type="radio" name="ordenar" id="ordenar_a_z" value="a_z" <%if(ordenar === 'a_z'){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="ordenar_a_z">A-Z</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" type="radio" name="ordenar" id="ordenar_z_a" value="z_a" <%if(ordenar === 'z_a'){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="ordenar_z_a">Z-A</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" type="radio" name="ordenar" id="ordenar_mais_recente" value="mais_recente" <%if(ordenar === 'mais_recente'){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="ordenar_mais_recente">Mais recente</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <div onclick="filtro()"><input class="form-check-input custom-radio checkFiltros" type="radio" name="ordenar" id="ordenar_menos_recente" value="menos_recente" <%if(ordenar === 'menos_recente'){%>checked<%}%>></div>
+                                        <label class="form-check-label" for="ordenar_menos_recente">Menos recente</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            
+                        </form>
+                    
+                </div>
+                
+                
+                
+    
+    
+                <div class="card-body">
+                    
+                    <div class="container">
+                        <% entidades.forEach((entidade) => { %>
+                           
+                            <div class="ticket-card mb-3" onclick="carregaBtns('<%=entidade.id%>')">
+                                <div class="ticket-header d-flex justify-content-between align-items-center">
+                                    <%
+                                        var tipoOk = ''
+                                        var tipo = tipos.find(tipo => tipo.id === entidade.tipo_entidade)
+                                        if(tipo){
+                                            tipoOk = tipo.tipo_entidade.toUpperCase()
+                                        }
+                                     %>  
+                                    
+                                    <span class="ticket-id">
+                                       <%=tipoOk%> DE <%=entidade.cidade.toUpperCase()%>/<%=entidade.estado.toUpperCase()%>
+                                    </span>
+                                    <span class="ticket-date text-muted">
+                                        <%= new Date(entidade.createdAt).toLocaleString('pt-BR', { 
+                                            day: '2-digit', 
+                                            month: '2-digit', 
+                                            year: 'numeric'
+                                        })%>
+                                    </span>
+                                </div>
+    
+                                
+                                <div class="ticket-details mt-2">
+                                    <% 
+                                        var versaoOK = ''
+                                        var versao = versoes.find(versao => versao.id === entidade.versao_sistema)
+                                        if(versao){
+                                            versaoOK = versao.versao.toUpperCase()
+                                        }
+                                    %>
+                                    <span class="ticket-prioridade d-block">Versão: <%=versaoOK %></span>
+    
+                                    <span class="ticket-tipo d-block">Instalado: <%= entidade.instalado === 1 ? 'Sim' : 'Não';%></span>
+                                </div>
+                                <% 
+                                    var ticketOk = ''
+                                    var ticket = tickets.find(ticket => ticket.id_entidade === entidade.id);
+                                    if(ticket){
+                                        ticketOk = 'Sim'
+                                    }
+                                    else{
+                                        ticketOk = 'Não'
+                                    }
+                                %>
+                                
+                                <div class="ticket-details mt-2">
+                                    <span class="ticket-assunto d-block text-uppercase"><strong>Tickets em aberto:</strong> <%=ticketOk%></span>
+                                </div>
+    
+                                <div style="display: none;" id="botoes-<%=entidade.id%>" class="mt-2">
+                                    <div class="d-flex">
+                                        <form action="/admin/deletar_entidade" method="post" class="flex" id="formDelete">
+                                            <% if(infoGrupo.alterar === 1){%>
+                                                <a href="/admin/alterar_entidades/<%=entidade.id%>"><div style="display: inline-block;" class="btn btn-warning btn-sm botao_alterar">
+                                                <i class="fas fa-edit"></i> Alterar
+                                                </div></a>
+                                            <%}%>
+            
+                                            <% if(infoGrupo.deletar === 1){%>
+                                                <div style="display: inline-block;" class="btn btn-danger btn-sm botao_deletar" onclick="deletar('<%=entidade.id%>')" >
+                                                    <i class="fas fa-trash-alt"></i> Deletar
+                                                </div>
+                                        <%}%>
+        
+                                        <a target="_blank" href="/entidade/<%=entidade.id%>"><div style="display: inline-block;" class="btn btn-dark btn-sm botao_visualizar">
+                                            <i class="fas fa-eye"></i> Visualizar
+                                        </div></a>
+
+                                            <input style="display: none;" type="hidden" name="id" value="<%=entidade.id%>"></input>
+                                        </form> 
+
+                                        <form action="/listar_tickets" method="GET">
+                                            <button style="display: inline-block;" class="btn btn-laranja btn-sm botao_visualizar">
+                                                <i class="fas fa-ticket-alt"></i> Tickets
+                                            </button>
+                                            <input style="display: none;" type="hidden" name="idEntidade" value="<%=entidade.id%>"></input>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+    
+                        <% }); %>
+                    </div>
+                      
+                     
+                </div>
+    
+                <% if(totalPages > 0){%>
+                    <div class="card-footer">
+    
+                        <div class="d-flex justify-content-center">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination">
+                                    <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                                        <a class="page-link" href="/admin/listar_entidades?page=<%= currentPage - 1 %>">Anterior</a>
+                                    </li>
+                                    
+                                    <% for (let i = 1; i <= totalPages; i++) { %>
+                                        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                            <a class="page-link" href="/admin/listar_entidades?page=<%= i %>"><%= i %></a>
+                                        </li>
+                                    <% } %>
+                            
+                                    <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                        <a class="page-link" href="/admin/listar_entidades?page=<%= currentPage + 1 %>">Próximo</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            
+                        </div>
+                    </div>
+                <%}%>
+    
+            </div>
+            
+    
+        </div>    
+
+    </div>
+    
+</body>
+
+
+<%- include('../../partials/footer.ejs') %>
